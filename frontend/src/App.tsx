@@ -16,7 +16,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { ApiRuleError, fetchBootstrap } from "./api/client";
-import type { BootstrapData, SupplierCompany } from "./api/client";
+import type { BootstrapData } from "./api/client";
 import { BlurText, SpotlightCard } from "./components/ui/MotionPrimitives";
 import { BookingSummaryPage } from "./pages/BookingSummaryPage";
 import { SupplierWorkspace } from "./pages/SupplierWorkspace";
@@ -24,17 +24,11 @@ import { TravelerWorkspace } from "./pages/TravelerWorkspace";
 
 type ScreenMode = "home" | "traveler" | "supplier" | "booking";
 
-const JAPAN_AIRPORTS = new Set(["NRT", "HND", "KIX"]);
-
 const SPRING_PILL = {
   type: "spring" as const,
   stiffness: 380,
   damping: 30
 };
-
-function isJapanSupplier(company: SupplierCompany): boolean {
-  return company.airports.some((code) => JAPAN_AIRPORTS.has(code));
-}
 
 function App() {
   const [screen, setScreen] = useState<ScreenMode>("home");
@@ -73,8 +67,6 @@ function App() {
 
   const suppliers = bootstrap?.suppliers ?? [];
   const activeSupplier = suppliers.find((s) => s.company_id === selectedSupplierId) ?? null;
-  const japanSuppliers = suppliers.filter(isJapanSupplier);
-  const uaeSuppliers = suppliers.filter((company) => !isJapanSupplier(company));
   const isSupplierMode = screen === "supplier";
 
   function switchScreen(next: ScreenMode): void {
@@ -346,7 +338,7 @@ function App() {
                   <div className="max-w-3xl mx-auto">
                     <span className="ui-badge ui-badge-accent mb-4 uppercase tracking-wider">
                       <PlaneLanding className="h-3.5 w-3.5" />
-                      <span>Japan &amp; UAE Airport Concierge</span>
+                      <span>SEAMLESS AIRPORT TRANSFERS</span>
                     </span>
 
                     <h1 className="text-3xl sm:text-[42px] font-extrabold leading-[1.14] text-[#0F172A]">
@@ -529,46 +521,20 @@ function App() {
                               ? "Loading verified operators..."
                               : suppliers.length === 0
                                 ? "Waiting for operator directory..."
-                                : "Select from all 11 partner fleets..."}
+                                : `Select from ${suppliers.length} partner fleets...`}
                           </option>
-                          {japanSuppliers.length > 0 && (
-                            <optgroup
-                              label="Japan (Tokyo · Osaka · Kyoto)"
-                              className="bg-white text-[#64748B]"
+                          {suppliers.map((company) => (
+                            <option
+                              key={company.company_id}
+                              value={company.company_id}
+                              className="bg-white text-[#0F172A]"
                             >
-                              {japanSuppliers.map((company) => (
-                                <option
-                                  key={company.company_id}
-                                  value={company.company_id}
-                                  className="bg-white text-[#0F172A]"
-                                >
-                                  {company.name} ({company.airports.join(", ")})
-                                  {company.servable_open_count
-                                    ? ` · ${company.servable_open_count} open`
-                                    : ""}
-                                </option>
-                              ))}
-                            </optgroup>
-                          )}
-                          {uaeSuppliers.length > 0 && (
-                            <optgroup
-                              label="United Arab Emirates (Dubai · Abu Dhabi)"
-                              className="bg-white text-[#64748B]"
-                            >
-                              {uaeSuppliers.map((company) => (
-                                <option
-                                  key={company.company_id}
-                                  value={company.company_id}
-                                  className="bg-white text-[#0F172A]"
-                                >
-                                  {company.name} ({company.airports.join(", ")})
-                                  {company.servable_open_count
-                                    ? ` · ${company.servable_open_count} open`
-                                    : ""}
-                                </option>
-                              ))}
-                            </optgroup>
-                          )}
+                              {company.name} ({company.airports.join(", ")})
+                              {company.servable_open_count
+                                ? ` · ${company.servable_open_count} open`
+                                : ""}
+                            </option>
+                          ))}
                         </select>
                         <ChevronDown className="h-4 w-4 text-[#0D9488] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>

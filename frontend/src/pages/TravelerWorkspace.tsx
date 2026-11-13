@@ -617,7 +617,7 @@ export function TravelerWorkspace({
           </div>
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-[#4F46E5] block mb-1">
-              Passenger Concierge
+              SEAMLESS AIRPORT TRANSFERS
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A]">
               Plan Your Airport Transfer
@@ -634,7 +634,7 @@ export function TravelerWorkspace({
           className="ui-btn-secondary ui-focus px-4 text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer"
         >
           <Sparkles className="h-4 w-4 text-[#4F46E5]" />
-          <span>Fill Sample Tokyo Trip</span>
+          <span>Fill Sample Trip</span>
         </button>
       </div>
 
