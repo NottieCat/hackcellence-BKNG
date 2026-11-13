@@ -4,6 +4,8 @@ import express from "express";
 import mongoose from "mongoose";
 import fs from "node:fs";
 import path from "node:path";
+import { seedDatabase } from "./seed/seedDatabase";
+import type { SeedSummary } from "./seed/seedDatabase";
 
 const envOptions = {
   path: path.resolve(__dirname, "../.env")
@@ -14,6 +16,8 @@ const app = express();
 const PORT = Number(process.env.PORT || 4000);
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/airport_taxi_offers";
 const DATA_DIR = path.resolve(__dirname, "../../data");
+
+let latestSeedSummary: SeedSummary | null = null;
 
 app.use(cors());
 app.use(express.json());
@@ -27,7 +31,8 @@ function handleHealthCheck(_req: express.Request, res: express.Response): void {
       status: "healthy",
       mongoConnected: dbConnected,
       database: mongoose.connection.name || "airport_taxi_offers",
-      dataDirectoryReady: dataExists
+      dataDirectoryReady: dataExists,
+      seededCounts: latestSeedSummary
     }
   };
 
@@ -48,10 +53,14 @@ async function startServer(): Promise<void> {
     };
     await mongoose.connect(MONGODB_URI, connectOptions);
     console.log(`MongoDB connected (${mongoose.connection.name})`);
+
+    latestSeedSummary = await seedDatabase(DATA_DIR);
+    console.log("Startup seed complete:", latestSeedSummary);
+
     app.listen(PORT, onServerListening);
   }
   catch (err) {
-    console.error(`MongoDB startup connection failed for ${MONGODB_URI}:`, err);
+    console.error(`MongoDB startup or seed failed for ${MONGODB_URI}:`, err);
     process.exit(1);
   }
 }
