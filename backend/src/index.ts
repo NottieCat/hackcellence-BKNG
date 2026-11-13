@@ -4,7 +4,9 @@ import express from "express";
 import mongoose from "mongoose";
 import fs from "node:fs";
 import path from "node:path";
+import { bookingRouter } from "./routes/bookingRoutes";
 import { catalogRouter } from "./routes/catalogRoutes";
+import { changeRouter } from "./routes/changeRoutes";
 import { requestRouter } from "./routes/requestRoutes";
 import { supplierRouter } from "./routes/supplierRoutes";
 import { seedDatabase } from "./seed/seedDatabase";
@@ -50,6 +52,8 @@ app.get("/api/health", handleHealthCheck);
 app.use("/api", catalogRouter);
 app.use("/api", requestRouter);
 app.use("/api", supplierRouter);
+app.use("/api", bookingRouter);
+app.use("/api", changeRouter);
 
 async function startServer(): Promise<void> {
   try {
