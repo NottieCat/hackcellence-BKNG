@@ -4,6 +4,7 @@ import express from "express";
 import mongoose from "mongoose";
 import fs from "node:fs";
 import path from "node:path";
+import { catalogRouter } from "./routes/catalogRoutes";
 import { seedDatabase } from "./seed/seedDatabase";
 import type { SeedSummary } from "./seed/seedDatabase";
 
@@ -44,6 +45,7 @@ function onServerListening(): void {
 }
 
 app.get("/api/health", handleHealthCheck);
+app.use("/api", catalogRouter);
 
 async function startServer(): Promise<void> {
   try {
