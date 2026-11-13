@@ -48,7 +48,6 @@ function readJsonFile<T>(filePath: string): T {
   return JSON.parse(raw) as T;
 }
 
-// Strip optional :SS seconds so all timestamps share fixed 16-char YYYY-MM-DDTHH:MM lexicographical ordering
 function toMinuteTimestamp(dateTimeStr: string): string {
   return dateTimeStr.trim().slice(0, 16);
 }

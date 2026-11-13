@@ -19,7 +19,7 @@ import type { FormEvent } from "react";
 import { ApiRuleError, fetchBootstrap } from "./api/client";
 import type { BootstrapData, SupplierCompany } from "./api/client";
 
-type ScreenMode = "home" | "supplier-picker" | "traveler" | "supplier" | "booking";
+type ScreenMode = "home" | "traveler" | "supplier" | "booking";
 
 const JAPAN_AIRPORTS = new Set(["NRT", "HND", "KIX"]);
 
@@ -68,10 +68,6 @@ function App() {
 
   function handleOpenTraveler(): void {
     setScreen("traveler");
-  }
-
-  function handleOpenSupplierPicker(): void {
-    setScreen("supplier-picker");
   }
 
   function handleChooseSupplier(companyId: string): void {
@@ -123,7 +119,6 @@ function App() {
             {screen !== "home" && (
               <div className="hidden sm:flex items-center gap-3 pl-4 border-l border-[#27272A] text-xs text-[#A1A1AA] truncate">
                 {screen === "traveler" && <span>Traveler Portal</span>}
-                {screen === "supplier-picker" && <span>Select Taxi Company</span>}
                 {screen === "supplier" && activeSupplier && (
                   <span>Supplier · {activeSupplier.name}</span>
                 )}
@@ -228,18 +223,14 @@ function App() {
                 Choose how you want to continue
               </h1>
               <p className="text-sm sm:text-base text-[#A1A1AA] mt-2 max-w-xl leading-relaxed">
-                No sign-in required. Enter as a traveler to request an airport pickup at your price, or select a taxi supplier to assign vehicles and manage bookings.
+                No sign-in required. Enter as a traveler to request an airport pickup at your price, or choose your taxi company to manage ride requests privately.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <button
-                type="button"
-                onClick={handleOpenTraveler}
-                className="ui-interactive ui-focus group text-left bg-[#18181B] hover:bg-[#202024] border border-[#27272A] hover:border-[#A3E635] p-7 flex flex-col justify-between min-h-[270px] cursor-pointer"
-              >
+              <div className="bg-[#18181B] border border-[#27272A] hover:border-[#3F3F46] p-7 flex flex-col justify-between min-h-[290px] ui-interactive">
                 <div>
-                  <div className="h-11 w-11 bg-[#111113] border border-[#27272A] group-hover:border-[#A3E635]/50 flex items-center justify-center text-[#A3E635] mb-6 ui-interactive">
+                  <div className="h-11 w-11 bg-[#111113] border border-[#27272A] flex items-center justify-center text-[#A3E635] mb-6">
                     <PlaneLanding className="h-5 w-5 stroke-[1.75]" />
                   </div>
                   <h2 className="text-xl font-semibold text-[#FAFAFA] tracking-tight">
@@ -250,184 +241,94 @@ function App() {
                   </p>
                 </div>
 
-                <div className="pt-6 mt-8 border-t border-[#27272A] flex items-center justify-between text-sm font-medium">
-                  <span className="text-[#FAFAFA] group-hover:text-[#A3E635] ui-interactive">
-                    Enter Traveler Portal
+                <div className="pt-6 mt-8 border-t border-[#27272A]">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#71717A] block mb-2">
+                    Passenger Portal
                   </span>
-                  <ArrowRight className="h-4 w-4 text-[#71717A] group-hover:text-[#A3E635] group-hover:translate-x-0.5 transition-transform duration-150" />
+                  <button
+                    type="button"
+                    onClick={handleOpenTraveler}
+                    className="ui-interactive ui-focus group w-full h-11 px-4 bg-[#A3E635] hover:bg-[#BEF264] text-[#09090B] font-semibold text-sm flex items-center justify-between cursor-pointer"
+                  >
+                    <span>Enter Traveler Portal</span>
+                    <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+                  </button>
                 </div>
-              </button>
+              </div>
 
-              <button
-                type="button"
-                onClick={handleOpenSupplierPicker}
-                className="ui-interactive ui-focus group text-left bg-[#18181B] hover:bg-[#202024] border border-[#27272A] hover:border-[#A3E635] p-7 flex flex-col justify-between min-h-[270px] cursor-pointer"
-              >
+              <div className="bg-[#18181B] border border-[#27272A] hover:border-[#3F3F46] p-7 flex flex-col justify-between min-h-[290px] ui-interactive">
                 <div>
-                  <div className="h-11 w-11 bg-[#111113] border border-[#27272A] group-hover:border-[#A3E635]/50 flex items-center justify-center text-[#A3E635] mb-6 ui-interactive">
+                  <div className="h-11 w-11 bg-[#111113] border border-[#27272A] flex items-center justify-center text-[#A3E635] mb-6">
                     <Building2 className="h-5 w-5 stroke-[1.75]" />
                   </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-xl font-semibold text-[#FAFAFA] tracking-tight">
-                      Taxi Supplier
-                    </h2>
-                    {suppliers.length > 0 && (
-                      <span className="px-2 py-0.5 bg-[#111113] border border-[#27272A] font-mono text-xs text-[#A1A1AA]">
-                        {suppliers.length} companies
-                      </span>
-                    )}
-                  </div>
+                  <h2 className="text-xl font-semibold text-[#FAFAFA] tracking-tight">
+                    Taxi Supplier
+                  </h2>
                   <p className="text-sm text-[#A1A1AA] mt-2.5 leading-relaxed">
-                    Choose your taxi company, inspect open ride requests you can serve, assign available cars with your price, and handle flight changes.
+                    Select your company below to go directly to its private workspace — view matching ride requests, assign available cars, and handle flight changes.
                   </p>
                 </div>
 
-                <div className="pt-6 mt-8 border-t border-[#27272A] flex items-center justify-between text-sm font-medium">
-                  <span className="text-[#FAFAFA] group-hover:text-[#A3E635] ui-interactive">
+                <div className="pt-6 mt-8 border-t border-[#27272A]">
+                  <label
+                    htmlFor="home-supplier-select"
+                    className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#71717A] block mb-2"
+                  >
                     Select Supplier Company
-                  </span>
-                  <ArrowRight className="h-4 w-4 text-[#71717A] group-hover:text-[#A3E635] group-hover:translate-x-0.5 transition-transform duration-150" />
-                </div>
-              </button>
-            </div>
-          </section>
-        )}
-
-        {screen === "supplier-picker" && (
-          <section key="supplier-picker" className="panel-enter space-y-8">
-            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#27272A] pb-5">
-              <div>
-                <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#A3E635] mb-1.5">
-                  Taxi Supplier Access
-                </p>
-                <h1 className="text-2xl font-semibold tracking-tight text-[#FAFAFA]">
-                  Select your taxi company
-                </h1>
-                <p className="text-sm text-[#A1A1AA] mt-1">
-                  Pick any registered operator below to view its matching ride requests and fleet.
-                </p>
-              </div>
-            </div>
-
-            {isSyncing && suppliers.length === 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[0, 1, 2, 3, 4, 5].map((item) => (
-                  <div key={item} className="bg-[#18181B] border border-[#27272A] p-5 space-y-3">
-                    <div className="h-4 w-36 skeleton-bar" />
-                    <div className="h-3 w-24 skeleton-bar" />
-                    <div className="h-8 w-full skeleton-bar mt-4" />
+                  </label>
+                  <div className="relative h-11 bg-[#111113] border border-[#27272A] hover:border-[#A3E635] focus-within:border-[#A3E635] ui-interactive">
+                    <select
+                      id="home-supplier-select"
+                      value=""
+                      disabled={suppliers.length === 0}
+                      onChange={(e) => handleChooseSupplier(e.target.value)}
+                      className="ui-focus w-full h-full appearance-none bg-transparent pl-3.5 pr-10 text-sm font-medium text-[#FAFAFA] disabled:text-[#71717A] focus:outline-none cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      <option value="" disabled className="bg-[#18181B] text-[#71717A]">
+                        {isSyncing && suppliers.length === 0
+                          ? "Loading companies..."
+                          : suppliers.length === 0
+                            ? "Waiting for backend catalog..."
+                            : "Choose your taxi company..."}
+                      </option>
+                      {japanSuppliers.length > 0 && (
+                        <optgroup
+                          label="Japan (NRT · HND · KIX)"
+                          className="bg-[#18181B] text-[#A1A1AA]"
+                        >
+                          {japanSuppliers.map((company) => (
+                            <option
+                              key={company.company_id}
+                              value={company.company_id}
+                              className="bg-[#18181B] text-[#FAFAFA]"
+                            >
+                              {company.name} ({company.airports.join(", ")})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {uaeSuppliers.length > 0 && (
+                        <optgroup
+                          label="UAE (DXB · AUH)"
+                          className="bg-[#18181B] text-[#A1A1AA]"
+                        >
+                          {uaeSuppliers.map((company) => (
+                            <option
+                              key={company.company_id}
+                              value={company.company_id}
+                              className="bg-[#18181B] text-[#FAFAFA]"
+                            >
+                              {company.name} ({company.airports.join(", ")})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                    <ChevronDown className="h-4 w-4 text-[#A3E635] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
-                ))}
-              </div>
-            )}
-
-            {japanSuppliers.length > 0 && (
-              <div className="space-y-3.5">
-                <h2 className="text-xs font-mono uppercase tracking-[0.12em] text-[#A1A1AA]">
-                  Japan · Tokyo, Osaka &amp; Kyoto ({japanSuppliers.length})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {japanSuppliers.map((company) => (
-                    <button
-                      key={company.company_id}
-                      type="button"
-                      onClick={() => handleChooseSupplier(company.company_id)}
-                      className="ui-interactive ui-focus group text-left bg-[#18181B] hover:bg-[#202024] border border-[#27272A] hover:border-[#A3E635] p-5 flex flex-col justify-between gap-5 cursor-pointer"
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h3 className="text-base font-semibold text-[#FAFAFA] group-hover:text-[#A3E635] ui-interactive">
-                              {company.name}
-                            </h3>
-                            <span className="font-mono text-xs text-[#71717A]">
-                              {company.company_id}
-                            </span>
-                          </div>
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#111113] border border-[#27272A] font-mono text-xs text-[#FAFAFA]">
-                            <Star className="h-3 w-3 text-[#A3E635] fill-[#A3E635]" />
-                            {company.rating.toFixed(1)}
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1.5">
-                          {company.airports.map((code) => (
-                            <span
-                              key={code}
-                              className="px-2 py-0.5 bg-[#111113] border border-[#27272A] font-mono text-xs text-[#A1A1AA]"
-                            >
-                              {code}
-                            </span>
-                          ))}
-                          <span className="px-2 py-0.5 bg-[#111113] border border-[#27272A] font-mono text-xs text-[#A1A1AA]">
-                            {company.service_from}–{company.service_until}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 border-t border-[#27272A] flex items-center justify-between text-xs text-[#A1A1AA]">
-                        <span>{company.vehicles.length} vehicles · {company.areas.length} hotel areas</span>
-                        <ArrowRight className="h-3.5 w-3.5 text-[#71717A] group-hover:text-[#A3E635]" />
-                      </div>
-                    </button>
-                  ))}
                 </div>
               </div>
-            )}
-
-            {uaeSuppliers.length > 0 && (
-              <div className="space-y-3.5">
-                <h2 className="text-xs font-mono uppercase tracking-[0.12em] text-[#A1A1AA]">
-                  UAE · Dubai &amp; Abu Dhabi ({uaeSuppliers.length})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {uaeSuppliers.map((company) => (
-                    <button
-                      key={company.company_id}
-                      type="button"
-                      onClick={() => handleChooseSupplier(company.company_id)}
-                      className="ui-interactive ui-focus group text-left bg-[#18181B] hover:bg-[#202024] border border-[#27272A] hover:border-[#A3E635] p-5 flex flex-col justify-between gap-5 cursor-pointer"
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h3 className="text-base font-semibold text-[#FAFAFA] group-hover:text-[#A3E635] ui-interactive">
-                              {company.name}
-                            </h3>
-                            <span className="font-mono text-xs text-[#71717A]">
-                              {company.company_id}
-                            </span>
-                          </div>
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#111113] border border-[#27272A] font-mono text-xs text-[#FAFAFA]">
-                            <Star className="h-3 w-3 text-[#A3E635] fill-[#A3E635]" />
-                            {company.rating.toFixed(1)}
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1.5">
-                          {company.airports.map((code) => (
-                            <span
-                              key={code}
-                              className="px-2 py-0.5 bg-[#111113] border border-[#27272A] font-mono text-xs text-[#A1A1AA]"
-                            >
-                              {code}
-                            </span>
-                          ))}
-                          <span className="px-2 py-0.5 bg-[#111113] border border-[#27272A] font-mono text-xs text-[#A1A1AA]">
-                            {company.service_from}–{company.service_until}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 border-t border-[#27272A] flex items-center justify-between text-xs text-[#A1A1AA]">
-                        <span>{company.vehicles.length} vehicles · {company.areas.length} hotel areas</span>
-                        <ArrowRight className="h-3.5 w-3.5 text-[#71717A] group-hover:text-[#A3E635]" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            </div>
           </section>
         )}
 
@@ -469,19 +370,9 @@ function App() {
           <section key="supplier-screen" className="panel-enter space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#27272A] pb-5">
               <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <button
-                    type="button"
-                    onClick={handleOpenSupplierPicker}
-                    className="text-xs text-[#A1A1AA] hover:text-[#A3E635] ui-interactive cursor-pointer"
-                  >
-                    All Suppliers
-                  </button>
-                  <span className="text-xs text-[#71717A]">/</span>
-                  <span className="font-mono text-xs text-[#A3E635]">
-                    {activeSupplier?.company_id}
-                  </span>
-                </div>
+                <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#A3E635] mb-1.5">
+                  Supplier Workspace · {activeSupplier?.company_id}
+                </p>
                 <h1 className="text-2xl font-semibold tracking-tight text-[#FAFAFA]">
                   {activeSupplier ? activeSupplier.name : "Supplier Dashboard"}
                 </h1>
