@@ -3,11 +3,14 @@ import path from "node:path";
 import {
   AirportModel,
   BookedRideModel,
+  BookingModel,
+  ChangeRequestModel,
   FlightModel,
   HotelModel,
   RideRequestModel,
   RouteModel,
-  TaxiCompanyModel
+  TaxiCompanyModel,
+  TaxiOfferModel
 } from "../models/schemas";
 import type {
   IAirport,
@@ -212,6 +215,57 @@ export async function seedDatabase(dataDir: string): Promise<SeedSummary> {
       }
     }))
   );
+
+  // Clean up accidental duplicate non-seed ride requests (e.g. repeated Sample Trip submissions)
+  // while preserving single active/booked requests across restarts (Rule M5).
+  const seedRequestIds = openRequestsRaw.map((req) => req.request_id);
+  const customRequests = await RideRequestModel.find({
+    request_id: { $nin: seedRequestIds }
+  })
+    .sort({ created_at: -1, request_id: -1 })
+    .lean();
+
+  const groupedByTravelerAndHotel = new Map<string, typeof customRequests>();
+  for (const doc of customRequests) {
+    const key = `${(doc.traveler_name || "").trim().toLowerCase()}::${doc.hotel_id}`;
+    const list = groupedByTravelerAndHotel.get(key) ?? [];
+    list.push(doc);
+    groupedByTravelerAndHotel.set(key, list);
+  }
+
+  const duplicateRequestIds: string[] = [];
+  for (const group of groupedByTravelerAndHotel.values()) {
+    if (group.length <= 1) {
+      continue;
+    }
+    // Prefer keeping the newest BOOKED request if one exists; otherwise keep only the newest OPEN request
+    const sorted = [...group].sort((a, b) => {
+      if (a.status !== b.status) {
+        return a.status === "BOOKED" ? -1 : 1;
+      }
+      return b.request_id.localeCompare(a.request_id);
+    });
+    for (const extra of sorted.slice(1)) {
+      duplicateRequestIds.push(extra.request_id);
+    }
+  }
+
+  if (duplicateRequestIds.length > 0) {
+    const linkedBookings = await BookingModel.find(
+      { request_id: { $in: duplicateRequestIds } },
+      { booking_number: 1 }
+    ).lean();
+    const bookingNumbers = linkedBookings.map((b) => b.booking_number);
+    if (bookingNumbers.length > 0) {
+      await ChangeRequestModel.deleteMany({ booking_number: { $in: bookingNumbers } });
+    }
+    await BookingModel.deleteMany({ request_id: { $in: duplicateRequestIds } });
+    await TaxiOfferModel.deleteMany({ request_id: { $in: duplicateRequestIds } });
+    await RideRequestModel.deleteMany({ request_id: { $in: duplicateRequestIds } });
+    console.log(
+      `[Seed] Removed ${duplicateRequestIds.length} duplicate ride request(s): ${duplicateRequestIds.join(", ")}`
+    );
+  }
 
   return {
     airports: airportsRaw.length,

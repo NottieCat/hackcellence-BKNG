@@ -407,6 +407,29 @@ export function createRideRequest(
   });
 }
 
+export function deleteRideRequest(
+  requestId: string
+): Promise<{ deleted_request_id: string }> {
+  return apiRequest<{ deleted_request_id: string }>(
+    `/api/requests/${encodeURIComponent(requestId)}`,
+    {
+      method: "DELETE"
+    }
+  );
+}
+
+export function resetDemoRequests(): Promise<{
+  deleted_custom_requests: number;
+  seed_requests_restored: number;
+}> {
+  return apiRequest<{
+    deleted_custom_requests: number;
+    seed_requests_restored: number;
+  }>("/api/requests/reset-demo", {
+    method: "POST"
+  });
+}
+
 export function fetchRequestDetail(
   requestId: string,
   options?: { sort?: string; carType?: string }

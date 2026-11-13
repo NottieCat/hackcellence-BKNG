@@ -12,10 +12,12 @@ import {
   PlaneLanding,
   Plus,
   RefreshCw,
+  RotateCcw,
   ShieldCheck,
   Sparkles,
   Star,
   Ticket,
+  Trash2,
   Users,
   X
 } from "lucide-react";
@@ -25,10 +27,12 @@ import {
   ApiRuleError,
   bookTaxiOffer,
   createRideRequest,
+  deleteRideRequest,
   fetchRequestDetail,
   fetchRideRequests,
   fetchRouteQuote,
-  rejectTaxiOffer
+  rejectTaxiOffer,
+  resetDemoRequests
 } from "../api/client";
 import type {
   BootstrapData,
@@ -71,6 +75,67 @@ const CAR_TYPE_FILTERS: Array<{ value: string; label: string }> = [
   { value: "SEDAN", label: "Sedan" },
   { value: "SUV", label: "SUV" },
   { value: "BUS", label: "Bus" }
+];
+
+const SEED_REQUEST_IDS = new Set(["REQ-0001", "REQ-0002", "REQ-0003"]);
+
+interface SampleTripPreset {
+  travelerName: string;
+  flightId: string;
+  hotelId: string;
+  adults: string;
+  childAges: string[];
+  largeBags: string;
+  smallBags: string;
+  pickup: string;
+  priceInr: string;
+}
+
+const SAMPLE_TRIPS: SampleTripPreset[] = [
+  {
+    travelerName: "Menon Family",
+    flightId: "FL-401",
+    hotelId: "HTL-TYO-004",
+    adults: "2",
+    childAges: ["6"],
+    largeBags: "3",
+    smallBags: "2",
+    pickup: "2027-04-10T11:30",
+    priceInr: "12000"
+  },
+  {
+    travelerName: "Tanaka Family",
+    flightId: "FL-1001",
+    hotelId: "HTL-TYO-001",
+    adults: "2",
+    childAges: [],
+    largeBags: "2",
+    smallBags: "1",
+    pickup: "2027-04-01T08:15",
+    priceInr: "3800"
+  },
+  {
+    travelerName: "Kapoor Group",
+    flightId: "FL-1004",
+    hotelId: "HTL-TYO-005",
+    adults: "3",
+    childAges: ["9"],
+    largeBags: "3",
+    smallBags: "2",
+    pickup: "2027-04-01T08:45",
+    priceInr: "14500"
+  },
+  {
+    travelerName: "Verma Family",
+    flightId: "FL-702",
+    hotelId: "HTL-KYO-012",
+    adults: "2",
+    childAges: ["8"],
+    largeBags: "2",
+    smallBags: "2",
+    pickup: "2027-04-01T10:15",
+    priceInr: "18000"
+  }
 ];
 
 function formatDateTimeLabel(isoHM: string): string {
@@ -179,6 +244,9 @@ export function TravelerWorkspace({
   const [offerErrorSeq, setOfferErrorSeq] = useState<number>(0);
   const [offerActionSuccess, setOfferActionSuccess] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
+  const [sampleCursor, setSampleCursor] = useState<number>(0);
+  const [deletingRequestId, setDeletingRequestId] = useState<string | null>(null);
+  const [isResettingDemo, setIsResettingDemo] = useState<boolean>(false);
 
   const airports = bootstrap?.airports ?? [];
   const allFlights = bootstrap?.flights ?? [];
@@ -282,19 +350,108 @@ export function TravelerWorkspace({
   }, [flightId, hotelId]);
 
   function handlePrefillSampleTrip(): void {
+    const existingNames = new Set(
+      requests.map((r) => r.traveler_name.trim().toLowerCase())
+    );
+    const currentInputName = travelerName.trim().toLowerCase();
+
+    let chosenIndex = SAMPLE_TRIPS.findIndex(
+      (preset) =>
+        !existingNames.has(preset.travelerName.toLowerCase()) &&
+        preset.travelerName.toLowerCase() !== currentInputName
+    );
+
+    let chosenTravelerName: string;
+    if (chosenIndex === -1) {
+      chosenIndex = sampleCursor % SAMPLE_TRIPS.length;
+      const basePreset = SAMPLE_TRIPS[chosenIndex];
+      let suffix = 2;
+      while (
+        existingNames.has(`${basePreset.travelerName.toLowerCase()} #${suffix}`)
+      ) {
+        suffix += 1;
+      }
+      chosenTravelerName = existingNames.has(basePreset.travelerName.toLowerCase())
+        ? `${basePreset.travelerName} #${suffix}`
+        : basePreset.travelerName;
+    }
+    else {
+      chosenTravelerName = SAMPLE_TRIPS[chosenIndex].travelerName;
+    }
+
+    const preset = SAMPLE_TRIPS[chosenIndex];
+    setSampleCursor((chosenIndex + 1) % SAMPLE_TRIPS.length);
+
     setAirportFilter("ALL");
-    setTravelerName("Menon Family");
-    setFlightId("FL-401");
-    setHotelId("HTL-TYO-004");
-    setAdults("2");
-    setChildAges(["6"]);
-    setLargeBags("3");
-    setSmallBags("2");
-    setPickup("2027-04-10T11:30");
+    setTravelerName(chosenTravelerName);
+    setFlightId(preset.flightId);
+    setHotelId(preset.hotelId);
+    setAdults(preset.adults);
+    setChildAges([...preset.childAges]);
+    setLargeBags(preset.largeBags);
+    setSmallBags(preset.smallBags);
+    setPickup(preset.pickup);
     setCarType("");
-    setPriceInr("12000");
+    setPriceInr(preset.priceInr);
     setSubmitError(null);
     setCreatedBanner(null);
+  }
+
+  async function handleDeleteCustomRequest(requestId: string): Promise<void> {
+    setDeletingRequestId(requestId);
+    setRequestsError(null);
+
+    try {
+      await deleteRideRequest(requestId);
+      if (expandedRequestId === requestId) {
+        setExpandedRequestId(null);
+        setExpandedDetail(null);
+      }
+      await loadRequests();
+      if (onCatalogRefresh) {
+        onCatalogRefresh();
+      }
+    }
+    catch (err) {
+      if (err instanceof ApiRuleError) {
+        setRequestsError(err.message);
+      }
+      else {
+        setRequestsError("Unable to remove ride request right now.");
+      }
+    }
+    finally {
+      setDeletingRequestId(null);
+    }
+  }
+
+  async function handleResetDemo(): Promise<void> {
+    setIsResettingDemo(true);
+    setRequestsError(null);
+    setCreatedBanner(null);
+    setSubmitError(null);
+
+    try {
+      await resetDemoRequests();
+      setExpandedRequestId(null);
+      setExpandedDetail(null);
+      setSampleCursor(0);
+      await loadRequests();
+      if (onCatalogRefresh) {
+        onCatalogRefresh();
+      }
+    }
+    catch (err) {
+      if (err instanceof ApiRuleError) {
+        setRequestsError(err.message);
+      }
+      else {
+        setRequestsError("Unable to reset demo trips right now.");
+      }
+    }
+    finally {
+      setIsResettingDemo(false);
+    }
   }
 
   function handleAddChild(): void {
@@ -521,6 +678,20 @@ export function TravelerWorkspace({
         `Trip ${result.request.request_id} posted at ${formatInr(result.request.price_inr)}. ${matchSummary}`
       );
 
+      // Clear form inputs so the previous trip doesn't remain prefilled for accidental duplicate submission
+      setTravelerName("");
+      setFlightId("");
+      setHotelId("");
+      setAdults("2");
+      setChildAges([]);
+      setLargeBags("1");
+      setSmallBags("1");
+      setPickup("");
+      setCarType("");
+      setPriceInr("");
+      setQuote(null);
+      setQuoteError(null);
+
       setRequestTab("ALL");
       await loadRequests();
       setExpandedRequestId(result.request.request_id);
@@ -605,6 +776,16 @@ export function TravelerWorkspace({
   );
   const bookedCount = useMemo(
     () => requests.filter((r) => r.status === "BOOKED").length,
+    [requests]
+  );
+  const hasCustomOrBookedDemoState = useMemo(
+    () =>
+      requests.some(
+        (r) =>
+          !SEED_REQUEST_IDS.has(r.request_id) ||
+          r.status === "BOOKED" ||
+          r.total_offers_count > 0
+      ),
     [requests]
   );
 
@@ -722,7 +903,7 @@ export function TravelerWorkspace({
                 type="text"
                 value={travelerName}
                 onChange={(e) => setTravelerName(e.target.value)}
-                placeholder="e.g. Menon Family"
+                placeholder="e.g. Guest or Family Name"
                 className="ui-input w-full px-3.5 text-sm sm:text-base placeholder:text-[#94A3B8]"
               />
             </div>
@@ -1218,6 +1399,21 @@ export function TravelerWorkspace({
                 ))}
               </div>
 
+              {hasCustomOrBookedDemoState && (
+                <button
+                  type="button"
+                  disabled={isResettingDemo}
+                  onClick={() => void handleResetDemo()}
+                  title="Clear custom practice trips and restore baseline requests"
+                  className="ui-btn-ghost ui-focus px-2.5 text-xs font-semibold text-[#64748B] hover:text-[#BE123C] inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <RotateCcw
+                    className={`h-3.5 w-3.5 ${isResettingDemo ? "animate-spin" : ""}`}
+                  />
+                  <span>Reset Demo</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => void loadRequests()}
@@ -1413,20 +1609,35 @@ export function TravelerWorkspace({
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => void handleToggleRequestDetail(item.request_id)}
-                        className="ui-btn-secondary ui-focus px-4 text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer"
-                      >
-                        <span>
-                          Vehicle Quotes ({item.total_offers_count})
-                        </span>
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-[#4F46E5]" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-[#4F46E5]" />
+                      <div className="flex items-center gap-2">
+                        {!SEED_REQUEST_IDS.has(item.request_id) && (
+                          <button
+                            type="button"
+                            disabled={deletingRequestId === item.request_id}
+                            onClick={() => void handleDeleteCustomRequest(item.request_id)}
+                            title={`Remove ${item.request_id}`}
+                            aria-label={`Remove ${item.request_id}`}
+                            className="ui-btn-ghost ui-focus w-9 text-[#94A3B8] hover:text-[#BE123C] hover:bg-[#FFF1F2] inline-flex items-center justify-center cursor-pointer disabled:opacity-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         )}
-                      </button>
+
+                        <button
+                          type="button"
+                          onClick={() => void handleToggleRequestDetail(item.request_id)}
+                          className="ui-btn-secondary ui-focus px-4 text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer"
+                        >
+                          <span>
+                            Vehicle Quotes ({item.total_offers_count})
+                          </span>
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-[#4F46E5]" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-[#4F46E5]" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

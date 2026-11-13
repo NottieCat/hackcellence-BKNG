@@ -2,6 +2,7 @@ import express from "express";
 import {
   BookedRideModel,
   BookingModel,
+  ChangeRequestModel,
   FlightModel,
   HotelModel,
   RideRequestModel,
@@ -22,6 +23,30 @@ import {
 } from "../services/ruleEngine";
 
 export const requestRouter = express.Router();
+
+const SEED_REQUEST_BASELINE = [
+  {
+    request_id: "REQ-0001",
+    flight_id: "FL-731",
+    pickup: "2027-04-08T09:45"
+  },
+  {
+    request_id: "REQ-0002",
+    flight_id: "FL-501",
+    pickup: "2027-04-09T10:15"
+  },
+  {
+    request_id: "REQ-0003",
+    flight_id: "FL-1193",
+    pickup: "2027-04-11T09:00"
+  }
+] as const;
+
+const SEED_REQUEST_IDS: string[] = SEED_REQUEST_BASELINE.map((r) => r.request_id);
+
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 export async function expireStaleOffers(): Promise<void> {
   await TaxiOfferModel.updateMany(
@@ -207,6 +232,25 @@ async function handleCreateRequest(req: express.Request, res: express.Response):
     const pickup = resolveAndValidatePickupR2(routeCtx.flight.arrival_local, requestedPickup);
     const priceInr = validatePriceInRangeR3(body.price_inr, routeCtx.route);
 
+    const existingOpen = await RideRequestModel.findOne({
+      status: "OPEN",
+      flight_id: routeCtx.flight.flight_id,
+      hotel_id: routeCtx.hotel.hotel_id,
+      traveler_name: {
+        $regex: new RegExp(`^\\s*${escapeRegex(travelerName)}\\s*$`, "i")
+      }
+    }).lean();
+
+    if (existingOpen) {
+      throw new RuleError(
+        "M1",
+        "DUPLICATE_OPEN_REQUEST",
+        `An open ride request (${existingOpen.request_id}) for "${existingOpen.traveler_name}" on ${routeCtx.flight.flight_id} → ${routeCtx.hotel.name} already exists. Use the existing trip card on the right or remove it first.`,
+        409,
+        { existing_request_id: existingOpen.request_id }
+      );
+    }
+
     const requestId = await generateNextRequestId();
 
     const createdDoc = await RideRequestModel.create({
@@ -374,6 +418,98 @@ async function handleGetRequestDetail(req: express.Request, res: express.Respons
   }
 }
 
+async function handleDeleteRequest(req: express.Request, res: express.Response): Promise<void> {
+  try {
+    const requestId = String(req.params.requestId || "").trim();
+
+    if (SEED_REQUEST_IDS.includes(requestId)) {
+      throw new RuleError(
+        "M5",
+        "SEED_REQUEST_PROTECTED",
+        `Baseline request ${requestId} is part of the problem seed dataset and cannot be deleted.`,
+        422
+      );
+    }
+
+    const existing = await RideRequestModel.findOne({ request_id: requestId }).lean();
+    if (!existing) {
+      res.status(404).json({
+        ok: false,
+        error: {
+          code: "REQUEST_NOT_FOUND",
+          message: `Ride request "${requestId}" was not found.`
+        }
+      });
+      return;
+    }
+
+    const linkedBookings = await BookingModel.find(
+      { request_id: requestId },
+      { booking_number: 1 }
+    ).lean();
+    const bookingNumbers = linkedBookings.map((b) => b.booking_number);
+
+    if (bookingNumbers.length > 0) {
+      await ChangeRequestModel.deleteMany({ booking_number: { $in: bookingNumbers } });
+    }
+    await BookingModel.deleteMany({ request_id: requestId });
+    await TaxiOfferModel.deleteMany({ request_id: requestId });
+    await RideRequestModel.deleteOne({ request_id: requestId });
+
+    res.status(200).json({
+      ok: true,
+      data: {
+        deleted_request_id: requestId
+      }
+    });
+  }
+  catch (err) {
+    sendRouteError(res, err, "DELETE_REQUEST_ERROR");
+  }
+}
+
+async function handleResetDemoRequests(
+  _req: express.Request,
+  res: express.Response
+): Promise<void> {
+  try {
+    const [deletedCustom] = await Promise.all([
+      RideRequestModel.deleteMany({ request_id: { $nin: SEED_REQUEST_IDS } }),
+      TaxiOfferModel.deleteMany({}),
+      BookingModel.deleteMany({}),
+      ChangeRequestModel.deleteMany({})
+    ]);
+
+    await RideRequestModel.bulkWrite(
+      SEED_REQUEST_BASELINE.map((seed) => ({
+        updateOne: {
+          filter: { request_id: seed.request_id },
+          update: {
+            $set: {
+              flight_id: seed.flight_id,
+              pickup: seed.pickup,
+              status: "OPEN"
+            }
+          }
+        }
+      }))
+    );
+
+    res.status(200).json({
+      ok: true,
+      data: {
+        deleted_custom_requests: deletedCustom.deletedCount ?? 0,
+        seed_requests_restored: SEED_REQUEST_IDS.length
+      }
+    });
+  }
+  catch (err) {
+    sendRouteError(res, err, "RESET_DEMO_REQUESTS_ERROR");
+  }
+}
+
 requestRouter.get("/requests", handleListRequests);
 requestRouter.post("/requests", handleCreateRequest);
+requestRouter.post("/requests/reset-demo", handleResetDemoRequests);
 requestRouter.get("/requests/:requestId", handleGetRequestDetail);
+requestRouter.delete("/requests/:requestId", handleDeleteRequest);
