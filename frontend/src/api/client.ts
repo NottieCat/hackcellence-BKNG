@@ -1,6 +1,7 @@
 export type CarType = "HATCHBACK" | "SEDAN" | "SUV" | "BUS";
 export type RequestStatus = "OPEN" | "BOOKED";
 export type OfferStatus = "OPEN" | "BOOKED" | "REJECTED" | "NOT_CHOSEN" | "EXPIRED";
+export type ChangeStatus = "PENDING" | "ACCEPTED" | "REJECTED";
 
 export interface Airport {
   code: string;
@@ -97,7 +98,7 @@ export interface ServabilityInfo {
   unservable_reasons: string[];
 }
 
-export interface EnrichedRideRequest {
+export interface RideRequestCore {
   request_id: string;
   traveler_name: string;
   flight_id: string;
@@ -110,6 +111,10 @@ export interface EnrichedRideRequest {
   car_type: CarType | null;
   price_inr: number;
   status: RequestStatus;
+  created_at?: string;
+}
+
+export interface EnrichedRideRequest extends RideRequestCore {
   created_at: string;
   flight: Flight | null;
   hotel: Hotel | null;
@@ -135,20 +140,7 @@ export interface CreateRideRequestInput {
 }
 
 export interface CreatedRideRequestResponse {
-  request: {
-    request_id: string;
-    traveler_name: string;
-    flight_id: string;
-    hotel_id: string;
-    adults: number;
-    child_ages: number[];
-    large_bags: number;
-    small_bags: number;
-    pickup: string;
-    car_type: CarType | null;
-    price_inr: number;
-    status: RequestStatus;
-  };
+  request: RideRequestCore;
   flight: Flight;
   hotel: Hotel;
   route: RouteInfo;
@@ -174,20 +166,7 @@ export interface EnrichedTaxiOffer {
 }
 
 export interface RequestDetailData {
-  request: {
-    request_id: string;
-    traveler_name: string;
-    flight_id: string;
-    hotel_id: string;
-    adults: number;
-    child_ages: number[];
-    large_bags: number;
-    small_bags: number;
-    pickup: string;
-    car_type: CarType | null;
-    price_inr: number;
-    status: RequestStatus;
-  };
+  request: RideRequestCore;
   flight: Flight;
   hotel: Hotel;
   route: RouteInfo;
@@ -201,6 +180,138 @@ export interface RequestDetailData {
   } | null;
   servability: ServabilityInfo;
   offers: EnrichedTaxiOffer[];
+}
+
+export interface SupplierVehicleEvaluation {
+  vehicle: Vehicle;
+  fits: boolean;
+  free: boolean;
+  eligible: boolean;
+  broken_rule: string | null;
+  reason: string | null;
+  conflict_source: string | null;
+  conflict_window: [string, string] | null;
+  already_offered_open: boolean;
+}
+
+export interface SupplierRawOffer {
+  offer_id: string;
+  request_id: string;
+  company_id: string;
+  vehicle_id: string;
+  price_inr: number;
+  expires_at: string | null;
+  status: OfferStatus;
+  created_at: string;
+}
+
+export interface SupplierServableRequest {
+  request: RideRequestCore;
+  flight: Flight;
+  hotel: Hotel;
+  route: RouteInfo;
+  busy_window: { start: string; end: string };
+  existing_offers: SupplierRawOffer[];
+  vehicle_evaluations: SupplierVehicleEvaluation[];
+}
+
+export interface SupplierOfferItem extends SupplierRawOffer {
+  vehicle: Vehicle | null;
+  request: RideRequestCore | null;
+  flight: Flight | null;
+  hotel: Hotel | null;
+}
+
+export interface BookingRecord {
+  booking_number: string;
+  request_id: string;
+  offer_id: string;
+  company_id: string;
+  vehicle_id: string;
+  flight_id: string;
+  hotel_id: string;
+  pickup: string;
+  busy_start: string;
+  busy_end: string;
+  price_inr: number;
+  status: "CONFIRMED";
+  created_at: string;
+}
+
+export interface SupplierBookingItem extends BookingRecord {
+  vehicle: Vehicle | null;
+  request: RideRequestCore | null;
+  flight: Flight | null;
+  hotel: Hotel | null;
+}
+
+export interface ChangeRequestItem {
+  change_id: string;
+  booking_number: string;
+  company_id: string;
+  prev_flight_id: string;
+  prev_pickup: string;
+  new_flight_id: string;
+  new_pickup: string;
+  new_busy_start: string;
+  new_busy_end: string;
+  status: ChangeStatus;
+  decision_reason: string | null;
+  created_at: string;
+  prev_flight?: Flight | null;
+  new_flight?: Flight | null;
+  booking?: BookingRecord | null;
+  hotel?: Hotel | null;
+}
+
+export interface FleetBusySlot {
+  source_type: "PREBOOKED" | "BOOKING";
+  reference_id: string;
+  request_id?: string;
+  flight_id?: string;
+  price_inr?: number;
+  start: string;
+  end: string;
+}
+
+export interface FleetTimelineItem {
+  vehicle: Vehicle;
+  busy_slots: FleetBusySlot[];
+}
+
+export interface SupplierDashboardData {
+  company: SupplierCompany;
+  servable_requests: SupplierServableRequest[];
+  my_offers: SupplierOfferItem[];
+  my_bookings: SupplierBookingItem[];
+  change_requests: ChangeRequestItem[];
+  pending_change_requests: ChangeRequestItem[];
+  fleet_timeline: FleetTimelineItem[];
+}
+
+export interface CreateSupplierOfferInput {
+  request_id: string;
+  vehicle_id: string;
+  price_inr: number;
+  expires_in_seconds?: number;
+}
+
+export interface BookingSummaryData {
+  booking: BookingRecord;
+  request: RideRequestCore | null;
+  flight: Flight | null;
+  hotel: Hotel | null;
+  route: RouteInfo | null;
+  company: {
+    company_id: string;
+    name: string;
+    rating: number;
+    airports?: string[];
+    service_from: string;
+    service_until: string;
+  } | null;
+  vehicle: Vehicle | null;
+  change_requests: ChangeRequestItem[];
 }
 
 export interface RuleErrorPayload {
@@ -310,4 +421,84 @@ export function fetchRequestDetail(
   const qs = params.toString();
   const suffix = qs ? `?${qs}` : "";
   return apiRequest<RequestDetailData>(`/api/requests/${encodeURIComponent(requestId)}${suffix}`);
+}
+
+export function fetchSupplierDashboard(companyId: string): Promise<SupplierDashboardData> {
+  return apiRequest<SupplierDashboardData>(
+    `/api/suppliers/${encodeURIComponent(companyId)}/dashboard`
+  );
+}
+
+export function createSupplierOffer(
+  companyId: string,
+  payload: CreateSupplierOfferInput
+): Promise<{ offer: EnrichedTaxiOffer; busy_window: { start: string; end: string } }> {
+  return apiRequest<{ offer: EnrichedTaxiOffer; busy_window: { start: string; end: string } }>(
+    `/api/suppliers/${encodeURIComponent(companyId)}/offers`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+export function rejectTaxiOffer(
+  offerId: string
+): Promise<{ offer_id: string; request_id: string; status: OfferStatus }> {
+  return apiRequest<{ offer_id: string; request_id: string; status: OfferStatus }>(
+    `/api/offers/${encodeURIComponent(offerId)}/reject`,
+    {
+      method: "POST"
+    }
+  );
+}
+
+export function bookTaxiOffer(offerId: string): Promise<BookingSummaryData> {
+  return apiRequest<BookingSummaryData>(
+    `/api/offers/${encodeURIComponent(offerId)}/book`,
+    {
+      method: "POST"
+    }
+  );
+}
+
+export function fetchBookingSummary(bookingNumber: string): Promise<BookingSummaryData> {
+  return apiRequest<BookingSummaryData>(
+    `/api/bookings/${encodeURIComponent(bookingNumber.trim())}`
+  );
+}
+
+export function createChangeRequest(
+  bookingNumber: string,
+  payload: { new_flight_id?: string; new_pickup?: string }
+): Promise<{
+  change_request: ChangeRequestItem;
+  feasibility_preview: {
+    car_free_at_new_time: boolean;
+    conflict_reason: string | null;
+    supplier_serves_new_airport: boolean;
+    supplier_open_at_new_pickup: boolean;
+  };
+}> {
+  return apiRequest(
+    `/api/bookings/${encodeURIComponent(bookingNumber.trim())}/change-requests`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+export function decideChangeRequest(
+  changeId: string,
+  decision: "ACCEPT" | "REJECT",
+  reason?: string
+): Promise<{ change_request: ChangeRequestItem; booking: BookingRecord }> {
+  return apiRequest<{ change_request: ChangeRequestItem; booking: BookingRecord }>(
+    `/api/change-requests/${encodeURIComponent(changeId)}/decision`,
+    {
+      method: "POST",
+      body: JSON.stringify({ decision, reason })
+    }
+  );
 }

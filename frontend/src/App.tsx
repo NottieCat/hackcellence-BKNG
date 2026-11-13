@@ -5,19 +5,15 @@ import {
   Building2,
   CarTaxiFront,
   ChevronDown,
-  Clock,
-  Luggage,
-  MapPin,
   PlaneLanding,
   RefreshCw,
-  Search,
-  Star,
-  Users
+  Search
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { ApiRuleError, fetchBootstrap } from "./api/client";
 import type { BootstrapData, SupplierCompany } from "./api/client";
+import { SupplierWorkspace } from "./pages/SupplierWorkspace";
 import { TravelerWorkspace } from "./pages/TravelerWorkspace";
 
 type ScreenMode = "home" | "traveler" | "supplier" | "booking";
@@ -349,118 +345,12 @@ function App() {
           )}
 
           {screen === "supplier" && (
-            <section key="supplier-screen" className="panel-enter space-y-6">
-              <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#E5E7EB] pb-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB] mb-1.5">
-                    Supplier Workspace · {activeSupplier?.company_id}
-                  </p>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827]">
-                    {activeSupplier ? activeSupplier.name : "Supplier Dashboard"}
-                  </h1>
-                </div>
-
-                {activeSupplier && (
-                  <div className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
-                    <span className="px-3.5 py-2 rounded-[6px] bg-white border border-[#E5E7EB] text-[#111827] inline-flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-[#2563EB]" />
-                      Hours: {activeSupplier.service_from}–{activeSupplier.service_until}
-                    </span>
-                    <span className="px-3.5 py-2 rounded-[6px] bg-white border border-[#E5E7EB] text-[#111827] inline-flex items-center gap-1.5">
-                      <Star className="h-4 w-4 text-[#F59E0B] fill-[#F59E0B]" />
-                      {activeSupplier.rating.toFixed(1)}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {activeSupplier && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="ui-card ui-card-hover space-y-5">
-                    <h2 className="text-lg font-semibold text-[#111827] flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-[#2563EB]" />
-                      Service Coverage
-                    </h2>
-                    <div>
-                      <span className="text-sm font-medium text-[#6B7280] block mb-2">Pickup Airports</span>
-                      <div className="flex flex-wrap gap-2">
-                        {activeSupplier.airports.map((code) => (
-                          <span
-                            key={code}
-                            className="ui-badge ui-badge-accent font-mono"
-                          >
-                            {code}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-[#6B7280] block mb-2">
-                        Hotel Drop-off Areas ({activeSupplier.areas.length})
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {activeSupplier.areas.map((zone) => (
-                          <span
-                            key={`${zone.city}-${zone.area}`}
-                            className="ui-badge ui-badge-neutral"
-                          >
-                            {zone.city} · {zone.area}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="lg:col-span-2 ui-card ui-card-hover">
-                    <h2 className="text-lg font-semibold text-[#111827] mb-4">
-                      Company Fleet ({activeSupplier.vehicles.length} cars)
-                    </h2>
-                    <div className="border border-[#E5E7EB] rounded-[8px] overflow-hidden overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-[#F8F9FB] border-b border-[#E5E7EB] text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
-                            <th className="py-3 px-4">Vehicle ID</th>
-                            <th className="py-3 px-4">Type</th>
-                            <th className="py-3 px-4">Seats</th>
-                            <th className="py-3 px-4">Large Bags</th>
-                            <th className="py-3 px-4">Small Bags</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#E5E7EB] text-sm">
-                          {activeSupplier.vehicles.map((car) => (
-                            <tr key={car.vehicle_id} className="ui-interactive hover:bg-[#F8F9FB]">
-                              <td className="py-3.5 px-4 font-mono font-semibold text-[#111827]">
-                                {car.vehicle_id}
-                              </td>
-                              <td className="py-3.5 px-4">
-                                <span className="ui-badge ui-badge-accent font-mono">
-                                  {car.type}
-                                </span>
-                              </td>
-                              <td className="py-3.5 px-4 font-mono text-[#6B7280]">
-                                <span className="inline-flex items-center gap-1.5">
-                                  <Users className="h-4 w-4 text-[#6B7280]" />
-                                  {car.seats}
-                                </span>
-                              </td>
-                              <td className="py-3.5 px-4 font-mono text-[#6B7280]">
-                                <span className="inline-flex items-center gap-1.5">
-                                  <Luggage className="h-4 w-4 text-[#6B7280]" />
-                                  {car.large_bags}
-                                </span>
-                              </td>
-                              <td className="py-3.5 px-4 font-mono text-[#6B7280]">
-                                {car.small_bags}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </section>
+            <SupplierWorkspace
+              companyId={selectedSupplierId}
+              fallbackCompany={activeSupplier}
+              onOpenBooking={handleOpenBookingByNumber}
+              onCatalogRefresh={() => void loadCatalog()}
+            />
           )}
 
           {screen === "booking" && (
