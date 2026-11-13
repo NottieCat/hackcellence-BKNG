@@ -295,16 +295,16 @@ export function TravelerWorkspace({
   }
 
   return (
-    <section className="panel-enter space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#27272A] pb-5">
+    <section className="panel-enter space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#E5E7EB] pb-6">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#A3E635] mb-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB] mb-1.5">
             Traveler Portal
           </p>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#FAFAFA]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827]">
             Post a Ride Request &amp; Compare Offers
           </h1>
-          <p className="text-sm text-[#A1A1AA] mt-1">
+          <p className="text-base text-[#6B7280] mt-1.5">
             Choose your arrival flight and hotel, enter your target price within the route range, and review assigned taxis.
           </p>
         </div>
@@ -312,55 +312,55 @@ export function TravelerWorkspace({
         <button
           type="button"
           onClick={handlePrefillMenonDemo}
-          className="ui-interactive ui-focus h-9 px-3.5 bg-[#18181B] border border-[#27272A] hover:border-[#A3E635] hover:bg-[#202024] text-xs font-medium text-[#FAFAFA] inline-flex items-center gap-2 cursor-pointer"
+          className="ui-btn-secondary ui-focus px-4 text-sm inline-flex items-center gap-2 cursor-pointer"
         >
-          <Sparkles className="h-3.5 w-3.5 text-[#A3E635]" />
+          <Sparkles className="h-4 w-4 text-[#2563EB]" />
           <span>Pre-fill Menon Family Demo</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
-        <div className="lg:col-span-5 bg-[#18181B] border border-[#27272A] p-6">
-          <div className="flex items-center justify-between border-b border-[#27272A] pb-4 mb-5">
-            <h2 className="text-base font-semibold text-[#FAFAFA]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-5 ui-card">
+          <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4 mb-6">
+            <h2 className="text-lg font-bold text-[#111827]">
               New Ride Request
             </h2>
-            <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-[#71717A]">
+            <span className="ui-badge ui-badge-neutral font-mono">
               Rules R1 · R2 · R3
             </span>
           </div>
 
           {submitError && (
-            <div className="mb-5 bg-[#111113] border border-[#27272A] border-l-2 border-l-[#F87171] p-4 space-y-1.5">
+            <div className="mb-5 ui-alert-error p-4 space-y-1.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-[#F87171]">
-                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#DC2626]">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
                   {submitError.rule ? `Rule ${submitError.rule} Refused` : "Validation Refused"}
                 </span>
-                <span className="font-mono text-[11px] text-[#71717A]">
+                <span className="font-mono text-xs text-[#991B1B]">
                   {submitError.code}
                 </span>
               </div>
-              <p className="text-xs text-[#FAFAFA] leading-relaxed">
+              <p className="text-sm text-[#991B1B] leading-relaxed">
                 {submitError.message}
               </p>
             </div>
           )}
 
           {createdBanner && (
-            <div className="mb-5 bg-[#111113] border border-[#27272A] border-l-2 border-l-[#A3E635] p-4 flex items-start gap-2.5">
-              <CheckCircle2 className="h-4 w-4 text-[#A3E635] shrink-0 mt-0.5" />
-              <p className="text-xs text-[#FAFAFA] leading-relaxed">
+            <div className="mb-5 ui-alert-success p-4 flex items-start gap-2.5">
+              <CheckCircle2 className="h-5 w-5 text-[#16A34A] shrink-0 mt-0.5" />
+              <p className="text-sm text-[#166534] leading-relaxed">
                 {createdBanner}
               </p>
             </div>
           )}
 
-          <form onSubmit={(e) => void handleSubmitRequest(e)} noValidate className="space-y-4">
+          <form onSubmit={(e) => void handleSubmitRequest(e)} noValidate className="space-y-5">
             <div>
               <label
                 htmlFor="traveler-name"
-                className="block text-xs font-medium text-[#A1A1AA] mb-1.5"
+                className="block text-sm font-medium text-[#111827] mb-1.5"
               >
                 Traveler / Family Name
               </label>
@@ -370,26 +370,26 @@ export function TravelerWorkspace({
                 value={travelerName}
                 onChange={(e) => setTravelerName(e.target.value)}
                 placeholder="e.g. Menon Family"
-                className="ui-interactive ui-focus w-full h-10 px-3 bg-[#111113] border border-[#27272A] focus:border-[#A3E635] text-sm text-[#FAFAFA] placeholder:text-[#71717A] focus:outline-none"
+                className="ui-input w-full px-3.5 text-base placeholder:text-[#6B7280]"
               />
             </div>
 
             <div>
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <label
                   htmlFor="flight-select"
-                  className="text-xs font-medium text-[#A1A1AA]"
+                  className="text-sm font-medium text-[#111827]"
                 >
                   Arrival Flight
                 </label>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
                     onClick={() => setAirportFilter("ALL")}
-                    className={`px-2 py-0.5 font-mono text-[11px] border cursor-pointer ui-interactive ${
+                    className={`px-2.5 py-0.5 rounded-[6px] font-mono text-xs border cursor-pointer ui-interactive ${
                       airportFilter === "ALL"
-                        ? "bg-[#A3E635] text-[#09090B] border-[#A3E635] font-semibold"
-                        : "bg-[#111113] text-[#A1A1AA] border-[#27272A] hover:border-[#3F3F46]"
+                        ? "bg-[#2563EB] text-white border-[#2563EB] font-semibold"
+                        : "bg-white text-[#6B7280] border-[#D1D5DB] hover:bg-[#F8F9FB] hover:text-[#111827]"
                     }`}
                   >
                     ALL
@@ -399,10 +399,10 @@ export function TravelerWorkspace({
                       key={airport.code}
                       type="button"
                       onClick={() => setAirportFilter(airport.code)}
-                      className={`px-2 py-0.5 font-mono text-[11px] border cursor-pointer ui-interactive ${
+                      className={`px-2.5 py-0.5 rounded-[6px] font-mono text-xs border cursor-pointer ui-interactive ${
                         airportFilter === airport.code
-                          ? "bg-[#A3E635] text-[#09090B] border-[#A3E635] font-semibold"
-                          : "bg-[#111113] text-[#A1A1AA] border-[#27272A] hover:border-[#3F3F46]"
+                          ? "bg-[#2563EB] text-white border-[#2563EB] font-semibold"
+                          : "bg-white text-[#6B7280] border-[#D1D5DB] hover:bg-[#F8F9FB] hover:text-[#111827]"
                       }`}
                     >
                       {airport.code}
@@ -411,58 +411,58 @@ export function TravelerWorkspace({
                 </div>
               </div>
 
-              <div className="relative h-10 bg-[#111113] border border-[#27272A] focus-within:border-[#A3E635] ui-interactive">
+              <div className="relative ui-input-wrap">
                 <select
                   id="flight-select"
                   value={flightId}
                   onChange={(e) => setFlightId(e.target.value)}
-                  className="ui-focus w-full h-full appearance-none bg-transparent pl-3 pr-9 text-xs sm:text-sm text-[#FAFAFA] focus:outline-none cursor-pointer"
+                  className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#111827] focus:outline-none cursor-pointer"
                 >
-                  <option value="" className="bg-[#18181B] text-[#71717A]">
+                  <option value="" className="bg-white text-[#6B7280]">
                     Select arrival flight ({filteredFlights.length})...
                   </option>
                   {filteredFlights.map((flight) => (
                     <option
                       key={flight.flight_id}
                       value={flight.flight_id}
-                      className="bg-[#18181B] text-[#FAFAFA]"
+                      className="bg-white text-[#111827]"
                     >
                       {flight.flight_id} · {flight.from} → {flight.to} · Lands {formatDateTimeLabel(flight.arrival_local)} ({flight.airline})
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="h-4 w-4 text-[#71717A] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="h-4 w-4 text-[#6B7280] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
             <div>
               <label
                 htmlFor="hotel-select"
-                className="block text-xs font-medium text-[#A1A1AA] mb-1.5"
+                className="block text-sm font-medium text-[#111827] mb-1.5"
               >
                 Destination Hotel
               </label>
-              <div className="relative h-10 bg-[#111113] border border-[#27272A] focus-within:border-[#A3E635] ui-interactive">
+              <div className="relative ui-input-wrap">
                 <select
                   id="hotel-select"
                   value={hotelId}
                   onChange={(e) => setHotelId(e.target.value)}
-                  className="ui-focus w-full h-full appearance-none bg-transparent pl-3 pr-9 text-xs sm:text-sm text-[#FAFAFA] focus:outline-none cursor-pointer"
+                  className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#111827] focus:outline-none cursor-pointer"
                 >
-                  <option value="" className="bg-[#18181B] text-[#71717A]">
+                  <option value="" className="bg-white text-[#6B7280]">
                     Select hotel ({allHotels.length})...
                   </option>
                   {hotelsByCity.map(([city, cityHotels]) => (
                     <optgroup
                       key={city}
                       label={`${city} (${cityHotels.length})`}
-                      className="bg-[#18181B] text-[#A1A1AA]"
+                      className="bg-white text-[#6B7280]"
                     >
                       {cityHotels.map((hotel) => (
                         <option
                           key={hotel.hotel_id}
                           value={hotel.hotel_id}
-                          className="bg-[#18181B] text-[#FAFAFA]"
+                          className="bg-white text-[#111827]"
                         >
                           {hotel.name} · {hotel.area} ({hotel.hotel_id})
                         </option>
@@ -470,59 +470,59 @@ export function TravelerWorkspace({
                     </optgroup>
                   ))}
                 </select>
-                <ChevronDown className="h-4 w-4 text-[#71717A] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="h-4 w-4 text-[#6B7280] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
             {isQuoting && (
-              <div className="bg-[#111113] border border-[#27272A] p-3.5 text-xs text-[#A1A1AA]">
+              <div className="bg-[#F8F9FB] border border-[#E5E7EB] rounded-[6px] p-4 text-sm text-[#6B7280]">
                 Calculating route range &amp; earliest pickup...
               </div>
             )}
 
             {quoteError && !isQuoting && (
-              <div className="bg-[#111113] border border-[#27272A] border-l-2 border-l-[#FBBF24] p-3.5 space-y-1">
-                <span className="font-mono text-xs font-semibold text-[#FBBF24] block">
+              <div className="ui-alert-error p-4 space-y-1">
+                <span className="text-sm font-semibold text-[#DC2626] block">
                   {quoteError.rule ? `Rule ${quoteError.rule} Warning` : "Route Mismatch"}
                 </span>
-                <p className="text-xs text-[#A1A1AA] leading-relaxed">
+                <p className="text-sm text-[#991B1B] leading-relaxed">
                   {quoteError.message}
                 </p>
               </div>
             )}
 
             {quote && !isQuoting && (
-              <div className="bg-[#111113] border border-[#27272A] border-l-2 border-l-[#A3E635] p-4 space-y-3">
+              <div className="ui-alert-info p-4 space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-[#A1A1AA]">
+                  <span className="text-sm font-medium text-[#6B7280]">
                     Suggested Route Range (R3)
                   </span>
-                  <span className="font-mono text-sm font-semibold text-[#A3E635]">
+                  <span className="font-mono text-base font-bold text-[#2563EB]">
                     {formatInr(quote.price_min_inr)} – {formatInr(quote.price_max_inr)}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#27272A] text-xs">
+                <div className="grid grid-cols-2 gap-3 pt-2.5 border-t border-[#E5E7EB] text-xs">
                   <div>
-                    <span className="text-[#71717A] block">Earliest Pickup (R2)</span>
-                    <span className="font-mono text-[#FAFAFA]">
+                    <span className="text-[#6B7280] block mb-0.5">Earliest Pickup (R2)</span>
+                    <span className="font-mono font-medium text-[#111827]">
                       {formatDateTimeLabel(quote.earliest_pickup)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[#71717A] block">Route Distance</span>
-                    <span className="font-mono text-[#FAFAFA]">
+                    <span className="text-[#6B7280] block mb-0.5">Route Distance</span>
+                    <span className="font-mono font-medium text-[#111827]">
                       {quote.drive_minutes}m · {quote.distance_km} km
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 pt-1">
-                  <span className="text-[11px] text-[#71717A] mr-1">Quick price:</span>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="text-xs text-[#6B7280]">Quick price:</span>
                   <button
                     type="button"
                     onClick={() => setPriceInr(String(quote.price_min_inr))}
-                    className="px-2 py-0.5 bg-[#18181B] border border-[#27272A] hover:border-[#A3E635] font-mono text-[11px] text-[#FAFAFA] cursor-pointer ui-interactive"
+                    className="px-2.5 py-1 rounded-[6px] bg-white border border-[#D1D5DB] hover:border-[#2563EB] hover:text-[#2563EB] font-mono text-xs text-[#111827] cursor-pointer ui-interactive"
                   >
                     Min {formatInr(quote.price_min_inr)}
                   </button>
@@ -533,14 +533,14 @@ export function TravelerWorkspace({
                         String(Math.round((quote.price_min_inr + quote.price_max_inr) / 2))
                       )
                     }
-                    className="px-2 py-0.5 bg-[#18181B] border border-[#27272A] hover:border-[#A3E635] font-mono text-[11px] text-[#FAFAFA] cursor-pointer ui-interactive"
+                    className="px-2.5 py-1 rounded-[6px] bg-white border border-[#D1D5DB] hover:border-[#2563EB] hover:text-[#2563EB] font-mono text-xs text-[#111827] cursor-pointer ui-interactive"
                   >
                     Mid {formatInr(Math.round((quote.price_min_inr + quote.price_max_inr) / 2))}
                   </button>
                   <button
                     type="button"
                     onClick={() => setPriceInr(String(quote.price_max_inr))}
-                    className="px-2 py-0.5 bg-[#18181B] border border-[#27272A] hover:border-[#A3E635] font-mono text-[11px] text-[#FAFAFA] cursor-pointer ui-interactive"
+                    className="px-2.5 py-1 rounded-[6px] bg-white border border-[#D1D5DB] hover:border-[#2563EB] hover:text-[#2563EB] font-mono text-xs text-[#111827] cursor-pointer ui-interactive"
                   >
                     Max {formatInr(quote.price_max_inr)}
                   </button>
@@ -552,7 +552,7 @@ export function TravelerWorkspace({
               <div>
                 <label
                   htmlFor="adults-input"
-                  className="block text-xs font-medium text-[#A1A1AA] mb-1.5"
+                  className="block text-sm font-medium text-[#111827] mb-1.5"
                 >
                   Adults
                 </label>
@@ -561,14 +561,14 @@ export function TravelerWorkspace({
                   type="number"
                   value={adults}
                   onChange={(e) => setAdults(e.target.value)}
-                  className="ui-interactive ui-focus w-full h-10 px-3 bg-[#111113] border border-[#27272A] focus:border-[#A3E635] font-mono text-sm text-[#FAFAFA] focus:outline-none"
+                  className="ui-input w-full px-3 font-mono text-base"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="large-bags-input"
-                  className="block text-xs font-medium text-[#A1A1AA] mb-1.5"
+                  className="block text-sm font-medium text-[#111827] mb-1.5"
                 >
                   Large Bags
                 </label>
@@ -577,14 +577,14 @@ export function TravelerWorkspace({
                   type="number"
                   value={largeBags}
                   onChange={(e) => setLargeBags(e.target.value)}
-                  className="ui-interactive ui-focus w-full h-10 px-3 bg-[#111113] border border-[#27272A] focus:border-[#A3E635] font-mono text-sm text-[#FAFAFA] focus:outline-none"
+                  className="ui-input w-full px-3 font-mono text-base"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="small-bags-input"
-                  className="block text-xs font-medium text-[#A1A1AA] mb-1.5"
+                  className="block text-sm font-medium text-[#111827] mb-1.5"
                 >
                   Small Bags
                 </label>
@@ -593,28 +593,28 @@ export function TravelerWorkspace({
                   type="number"
                   value={smallBags}
                   onChange={(e) => setSmallBags(e.target.value)}
-                  className="ui-interactive ui-focus w-full h-10 px-3 bg-[#111113] border border-[#27272A] focus:border-[#A3E635] font-mono text-sm text-[#FAFAFA] focus:outline-none"
+                  className="ui-input w-full px-3 font-mono text-base"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-medium text-[#A1A1AA]">
+                <span className="text-sm font-medium text-[#111827]">
                   Children&apos;s Ages (0–17)
                 </span>
                 <button
                   type="button"
                   onClick={handleAddChild}
-                  className="ui-interactive ui-focus px-2.5 py-1 bg-[#111113] border border-[#27272A] hover:border-[#A3E635] text-xs text-[#FAFAFA] inline-flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 rounded-[6px] bg-white border border-[#D1D5DB] hover:bg-[#F8F9FB] hover:border-[#9CA3AF] text-xs font-medium text-[#111827] inline-flex items-center gap-1 cursor-pointer ui-interactive"
                 >
-                  <Plus className="h-3 w-3 text-[#A3E635]" />
+                  <Plus className="h-3.5 w-3.5 text-[#2563EB]" />
                   <span>Add Child</span>
                 </button>
               </div>
 
               {childAges.length === 0 ? (
-                <p className="text-xs text-[#71717A]">
+                <p className="text-sm text-[#6B7280]">
                   No children added. Click &ldquo;Add Child&rdquo; to include child ages.
                 </p>
               ) : (
@@ -622,9 +622,9 @@ export function TravelerWorkspace({
                   {childAges.map((age, index) => (
                     <div
                       key={index}
-                      className="inline-flex items-center bg-[#111113] border border-[#27272A] h-9"
+                      className="inline-flex items-center bg-white border border-[#D1D5DB] rounded-[6px] h-11 overflow-hidden focus-within:border-[#2563EB]"
                     >
-                      <span className="px-2 text-[11px] text-[#71717A] border-r border-[#27272A]">
+                      <span className="px-2.5 text-xs font-medium text-[#6B7280] bg-[#F8F9FB] h-full inline-flex items-center border-r border-[#E5E7EB]">
                         #{index + 1}
                       </span>
                       <input
@@ -632,15 +632,15 @@ export function TravelerWorkspace({
                         aria-label={`Child ${index + 1} age`}
                         value={age}
                         onChange={(e) => handleUpdateChildAge(index, e.target.value)}
-                        className="w-14 h-full px-2 bg-transparent font-mono text-xs text-[#FAFAFA] focus:outline-none"
+                        className="w-16 h-full px-2.5 bg-white font-mono text-sm text-[#111827] focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => handleRemoveChild(index)}
                         aria-label={`Remove child ${index + 1}`}
-                        className="h-full px-2 text-[#71717A] hover:text-[#F87171] border-l border-[#27272A] cursor-pointer"
+                        className="h-full px-2.5 text-[#6B7280] hover:text-[#DC2626] hover:bg-[#FEF2F2] border-l border-[#E5E7EB] cursor-pointer ui-interactive"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ))}
@@ -652,16 +652,16 @@ export function TravelerWorkspace({
               <div className="flex items-center justify-between mb-1.5">
                 <label
                   htmlFor="pickup-input"
-                  className="text-xs font-medium text-[#A1A1AA]"
+                  className="text-sm font-medium text-[#111827]"
                 >
                   Pickup Time (Optional · Local Airport Time)
                 </label>
-                <div className="flex items-center gap-2 text-[11px]">
+                <div className="flex items-center gap-3 text-xs font-medium">
                   {quote && (
                     <button
                       type="button"
                       onClick={() => setPickup(quote.earliest_pickup)}
-                      className="text-[#A3E635] hover:underline cursor-pointer"
+                      className="text-[#2563EB] hover:underline cursor-pointer"
                     >
                       Use {quote.earliest_pickup.slice(11, 16)}
                     </button>
@@ -670,7 +670,7 @@ export function TravelerWorkspace({
                     <button
                       type="button"
                       onClick={() => setPickup("")}
-                      className="text-[#71717A] hover:text-[#FAFAFA] cursor-pointer"
+                      className="text-[#6B7280] hover:text-[#111827] cursor-pointer"
                     >
                       Clear
                     </button>
@@ -682,9 +682,9 @@ export function TravelerWorkspace({
                 type="datetime-local"
                 value={pickup}
                 onChange={(e) => setPickup(e.target.value)}
-                className="ui-interactive ui-focus w-full h-10 px-3 bg-[#111113] border border-[#27272A] focus:border-[#A3E635] font-mono text-xs sm:text-sm text-[#FAFAFA] focus:outline-none"
+                className="ui-input w-full px-3.5 font-mono text-sm"
               />
-              <p className="text-[11px] text-[#71717A] mt-1">
+              <p className="text-xs text-[#6B7280] mt-1.5">
                 Leave blank to default to landing + 60 minutes (R2).
               </p>
             </div>
@@ -693,53 +693,53 @@ export function TravelerWorkspace({
               <div>
                 <label
                   htmlFor="car-type-select"
-                  className="block text-xs font-medium text-[#A1A1AA] mb-1.5"
+                  className="block text-sm font-medium text-[#111827] mb-1.5"
                 >
                   Car Type (Optional · G2)
                 </label>
-                <div className="relative h-10 bg-[#111113] border border-[#27272A] focus-within:border-[#A3E635] ui-interactive">
+                <div className="relative ui-input-wrap">
                   <select
                     id="car-type-select"
                     value={carType}
                     onChange={(e) => setCarType(e.target.value)}
-                    className="ui-focus w-full h-full appearance-none bg-transparent pl-3 pr-8 text-xs sm:text-sm text-[#FAFAFA] focus:outline-none cursor-pointer"
+                    className="w-full h-full appearance-none bg-transparent pl-3.5 pr-8 text-sm text-[#111827] focus:outline-none cursor-pointer"
                   >
-                    <option value="" className="bg-[#18181B] text-[#FAFAFA]">
+                    <option value="" className="bg-white text-[#111827]">
                       Any Car Type
                     </option>
-                    <option value="HATCHBACK" className="bg-[#18181B] text-[#FAFAFA]">
+                    <option value="HATCHBACK" className="bg-white text-[#111827]">
                       HATCHBACK
                     </option>
-                    <option value="SEDAN" className="bg-[#18181B] text-[#FAFAFA]">
+                    <option value="SEDAN" className="bg-white text-[#111827]">
                       SEDAN
                     </option>
-                    <option value="SUV" className="bg-[#18181B] text-[#FAFAFA]">
+                    <option value="SUV" className="bg-white text-[#111827]">
                       SUV
                     </option>
-                    <option value="BUS" className="bg-[#18181B] text-[#FAFAFA]">
+                    <option value="BUS" className="bg-white text-[#111827]">
                       BUS
                     </option>
                   </select>
-                  <ChevronDown className="h-4 w-4 text-[#71717A] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="h-4 w-4 text-[#6B7280] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
               <div>
                 <label
                   htmlFor="price-input"
-                  className="block text-xs font-medium text-[#A1A1AA] mb-1.5"
+                  className="block text-sm font-medium text-[#111827] mb-1.5"
                 >
                   Your Offer Price (INR · R3)
                 </label>
-                <div className="relative h-10">
-                  <IndianRupee className="h-3.5 w-3.5 text-[#71717A] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <div className="relative">
+                  <IndianRupee className="h-4 w-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     id="price-input"
                     type="number"
                     value={priceInr}
                     onChange={(e) => setPriceInr(e.target.value)}
                     placeholder="e.g. 12000"
-                    className="ui-interactive ui-focus w-full h-full pl-8 pr-3 bg-[#111113] border border-[#27272A] focus:border-[#A3E635] font-mono text-sm text-[#FAFAFA] placeholder:font-sans placeholder:text-[#71717A] focus:outline-none"
+                    className="ui-input w-full pl-9 pr-3.5 font-mono text-base placeholder:font-sans placeholder:text-[#6B7280]"
                   />
                 </div>
               </div>
@@ -748,7 +748,7 @@ export function TravelerWorkspace({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="ui-interactive ui-focus w-full h-11 mt-2 bg-[#A3E635] hover:bg-[#BEF264] disabled:opacity-60 text-[#09090B] font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              className="ui-btn-primary ui-focus w-full mt-2 px-5 text-base flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <span>{isSubmitting ? "Posting Ride Request..." : "Post Ride Request"}</span>
               <ArrowRight className="h-4 w-4" />
@@ -756,45 +756,45 @@ export function TravelerWorkspace({
           </form>
         </div>
 
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between bg-[#18181B] border border-[#27272A] px-5 py-3.5">
+        <div className="lg:col-span-7 space-y-5">
+          <div className="ui-card flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-[#FAFAFA]">
+              <h2 className="text-lg font-bold text-[#111827]">
                 Ride Requests ({requests.length})
               </h2>
-              <p className="text-xs text-[#71717A]">
+              <p className="text-sm text-[#6B7280] mt-0.5">
                 Includes open requests, supplier eligibility diagnostics (M2), and assigned taxis.
               </p>
             </div>
             <button
               type="button"
               onClick={() => void loadRequests()}
-              className="ui-interactive ui-focus h-8 px-3 bg-[#111113] border border-[#27272A] hover:border-[#3F3F46] text-xs text-[#A1A1AA] hover:text-[#FAFAFA] inline-flex items-center gap-1.5 cursor-pointer"
+              className="ui-btn-secondary ui-focus px-4 text-sm inline-flex items-center gap-2 cursor-pointer"
             >
-              <RefreshCw className={`h-3 w-3 ${isLoadingRequests ? "animate-spin text-[#A3E635]" : ""}`} />
+              <RefreshCw className={`h-4 w-4 ${isLoadingRequests ? "animate-spin text-[#2563EB]" : "text-[#6B7280]"}`} />
               <span>Refresh</span>
             </button>
           </div>
 
           {requestsError && (
-            <div className="bg-[#18181B] border border-[#27272A] border-l-2 border-l-[#F87171] p-4 text-xs text-[#FAFAFA]">
+            <div className="ui-alert-error p-4 text-sm text-[#991B1B]">
               {requestsError}
             </div>
           )}
 
           {isLoadingRequests && requests.length === 0 && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {[0, 1, 2].map((idx) => (
-                <div key={idx} className="bg-[#18181B] border border-[#27272A] p-5 space-y-3">
-                  <div className="h-4 w-40 skeleton-bar" />
-                  <div className="h-3 w-64 skeleton-bar" />
-                  <div className="h-8 w-full skeleton-bar" />
+                <div key={idx} className="ui-card space-y-3">
+                  <div className="h-5 w-40 skeleton-bar" />
+                  <div className="h-4 w-64 skeleton-bar" />
+                  <div className="h-10 w-full skeleton-bar" />
                 </div>
               ))}
             </div>
           )}
 
-          <div className="space-y-3.5">
+          <div className="space-y-4">
             {requests.map((item) => {
               const isExpanded = expandedRequestId === item.request_id;
               const isZeroSuppliers =
@@ -803,80 +803,80 @@ export function TravelerWorkspace({
               return (
                 <div
                   key={item.request_id}
-                  className={`bg-[#18181B] border ui-interactive ${
-                    isExpanded ? "border-[#A3E635]" : "border-[#27272A] hover:border-[#3F3F46]"
+                  className={`bg-white rounded-[8px] border overflow-hidden ui-card-hover ${
+                    isExpanded ? "border-[#2563EB]" : "border-[#E5E7EB]"
                   }`}
                 >
-                  <div className="p-5 space-y-3.5">
+                  <div className="p-6 space-y-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs font-semibold text-[#FAFAFA] px-2 py-0.5 bg-[#111113] border border-[#27272A]">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <span className="font-mono text-xs font-semibold text-[#111827] px-2.5 py-1 rounded-[6px] bg-[#F8F9FB] border border-[#E5E7EB]">
                           {item.request_id}
                         </span>
-                        <span className="text-sm font-semibold text-[#FAFAFA]">
+                        <span className="text-base font-bold text-[#111827]">
                           {item.traveler_name}
                         </span>
                         <span
-                          className={`px-2 py-0.5 font-mono text-[11px] border ${
+                          className={
                             item.status === "BOOKED"
-                              ? "bg-[#A3E635]/15 text-[#A3E635] border-[#A3E635]/40"
-                              : "bg-[#111113] text-[#A1A1AA] border-[#27272A]"
-                          }`}
+                              ? "ui-badge ui-badge-booked"
+                              : "ui-badge ui-badge-pending"
+                          }
                         >
                           {item.status}
                         </span>
                         {item.car_type && (
-                          <span className="px-2 py-0.5 font-mono text-[11px] bg-[#111113] border border-[#27272A] text-[#A3E635]">
+                          <span className="ui-badge ui-badge-accent font-mono">
                             {item.car_type}
                           </span>
                         )}
                       </div>
 
                       <div className="text-right">
-                        <span className="font-mono text-base font-semibold text-[#FAFAFA] block">
+                        <span className="font-mono text-lg font-bold text-[#111827] block">
                           {formatInr(item.price_inr)}
                         </span>
                         {item.route && (
-                          <span className="font-mono text-[11px] text-[#71717A] block">
+                          <span className="font-mono text-xs text-[#6B7280] block">
                             Range {formatInr(item.route.price_min_inr)}–{formatInr(item.route.price_max_inr)}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#A1A1AA]">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-sm text-[#6B7280]">
                       <div className="flex items-center gap-2">
-                        <PlaneLanding className="h-3.5 w-3.5 text-[#A3E635] shrink-0" />
-                        <span className="truncate">
+                        <PlaneLanding className="h-4 w-4 text-[#2563EB] shrink-0" />
+                        <span className="truncate text-[#111827] font-medium">
                           {item.flight
                             ? `${item.flight.flight_id} (${item.flight.from} → ${item.flight.to})`
                             : item.flight_id}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-3.5 w-3.5 text-[#A3E635] shrink-0" />
-                        <span className="truncate">
+                        <MapPin className="h-4 w-4 text-[#2563EB] shrink-0" />
+                        <span className="truncate text-[#111827] font-medium">
                           {item.hotel
                             ? `${item.hotel.name} · ${item.hotel.city} (${item.hotel.area})`
                             : item.hotel_id}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Clock className="h-3.5 w-3.5 text-[#71717A] shrink-0" />
-                        <span className="font-mono">
+                        <Clock className="h-4 w-4 text-[#6B7280] shrink-0" />
+                        <span className="font-mono text-xs sm:text-sm">
                           Pickup {formatDateTimeLabel(item.pickup)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Users className="h-3.5 w-3.5 text-[#71717A] shrink-0" />
+                        <Users className="h-4 w-4 text-[#6B7280] shrink-0" />
                         <span>
                           {item.adults} adult{item.adults === 1 ? "" : "s"}
                           {item.child_ages.length > 0
                             ? ` + ${item.child_ages.length} child (${item.child_ages.join(", ")}y)`
                             : ""}
                         </span>
-                        <span className="text-[#71717A]">·</span>
-                        <Luggage className="h-3.5 w-3.5 text-[#71717A] shrink-0" />
+                        <span className="text-[#D1D5DB]">·</span>
+                        <Luggage className="h-4 w-4 text-[#6B7280] shrink-0" />
                         <span>
                           {item.large_bags}L / {item.small_bags}S
                         </span>
@@ -884,12 +884,12 @@ export function TravelerWorkspace({
                     </div>
 
                     {isZeroSuppliers && (
-                      <div className="bg-[#111113] border border-[#27272A] border-l-2 border-l-[#FBBF24] p-3.5 space-y-1.5">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-[#FBBF24]">
-                          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      <div className="ui-alert-error p-4 space-y-1.5">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-[#DC2626]">
+                          <AlertTriangle className="h-4 w-4 shrink-0" />
                           <span>No taxi supplier can serve this request (M2)</span>
                         </div>
-                        <ul className="space-y-1 pl-5 list-disc text-xs text-[#A1A1AA]">
+                        <ul className="space-y-1 pl-5 list-disc text-sm text-[#991B1B]">
                           {item.servability.unservable_reasons.map((reason, idx) => (
                             <li key={idx}>{reason}</li>
                           ))}
@@ -897,26 +897,26 @@ export function TravelerWorkspace({
                       </div>
                     )}
 
-                    <div className="pt-3 border-t border-[#27272A] flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div className="pt-4 border-t border-[#E5E7EB] flex flex-wrap items-center justify-between gap-3 text-sm">
                       <div>
                         {item.status === "BOOKED" && item.booking_number ? (
                           <button
                             type="button"
                             onClick={() => onOpenBooking(item.booking_number!)}
-                            className="font-mono text-[#A3E635] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+                            className="font-mono font-semibold text-[#2563EB] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
                           >
                             <span>Booking #{item.booking_number}</span>
-                            <ArrowRight className="h-3.5 w-3.5" />
+                            <ArrowRight className="h-4 w-4" />
                           </button>
                         ) : isZeroSuppliers ? (
-                          <span className="text-[#FBBF24]">
+                          <span className="text-[#DC2626] font-medium">
                             0 eligible suppliers at {item.flight?.to ?? "arrival airport"}
                           </span>
                         ) : (
-                          <span className="text-[#A1A1AA]">
+                          <span className="text-[#6B7280]">
                             {item.servability.servable_count} eligible supplier
                             {item.servability.servable_count === 1 ? "" : "s"} ·{" "}
-                            <span className="font-mono text-[#FAFAFA]">
+                            <span className="font-mono font-semibold text-[#111827]">
                               {item.open_offers_count}
                             </span>{" "}
                             open taxi offer{item.open_offers_count === 1 ? "" : "s"}
@@ -927,69 +927,69 @@ export function TravelerWorkspace({
                       <button
                         type="button"
                         onClick={() => void handleToggleRequestDetail(item.request_id)}
-                        className="ui-interactive ui-focus px-3 py-1.5 bg-[#111113] border border-[#27272A] hover:border-[#A3E635] text-xs font-medium text-[#FAFAFA] inline-flex items-center gap-1.5 cursor-pointer"
+                        className="ui-btn-secondary ui-focus px-4 text-sm inline-flex items-center gap-2 cursor-pointer"
                       >
                         <span>
                           Assigned Taxis ({item.total_offers_count})
                         </span>
                         {isExpanded ? (
-                          <ChevronUp className="h-3.5 w-3.5 text-[#A3E635]" />
+                          <ChevronUp className="h-4 w-4 text-[#2563EB]" />
                         ) : (
-                          <ChevronDown className="h-3.5 w-3.5 text-[#71717A]" />
+                          <ChevronDown className="h-4 w-4 text-[#6B7280]" />
                         )}
                       </button>
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className="border-t border-[#27272A] bg-[#111113] p-5">
+                    <div className="border-t border-[#E5E7EB] bg-[#F8F9FB] p-6">
                       {isLoadingDetail ? (
-                        <p className="text-xs text-[#A1A1AA]">Loading assigned taxis...</p>
+                        <p className="text-sm text-[#6B7280]">Loading assigned taxis...</p>
                       ) : !expandedDetail || expandedDetail.offers.length === 0 ? (
-                        <p className="text-xs text-[#71717A]">
+                        <p className="text-sm text-[#6B7280]">
                           No taxi offers assigned yet. Switch to a Taxi Supplier workspace to assign a car and price.
                         </p>
                       ) : (
-                        <div className="space-y-2.5">
-                          <p className="text-xs text-[#A1A1AA] mb-2">
+                        <div className="space-y-3">
+                          <p className="text-sm font-medium text-[#6B7280] mb-2">
                             Assigned Taxis ({expandedDetail.offers.length}) — Book &amp; Reject actions wire in Step 9:
                           </p>
                           {expandedDetail.offers.map((offer) => (
                             <div
                               key={offer.offer_id}
-                              className="bg-[#18181B] border border-[#27272A] p-3.5 flex flex-wrap items-center justify-between gap-3"
+                              className="bg-white border border-[#E5E7EB] rounded-[8px] p-4 flex flex-wrap items-center justify-between gap-3"
                             >
                               <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-semibold text-[#FAFAFA]">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-base font-bold text-[#111827]">
                                     {offer.company_name}
                                   </span>
                                   {offer.company_rating !== null && (
-                                    <span className="inline-flex items-center gap-1 font-mono text-xs text-[#A1A1AA]">
-                                      <Star className="h-3 w-3 text-[#A3E635] fill-[#A3E635]" />
+                                    <span className="inline-flex items-center gap-1 font-mono text-xs text-[#6B7280]">
+                                      <Star className="h-3.5 w-3.5 text-[#F59E0B] fill-[#F59E0B]" />
                                       {offer.company_rating.toFixed(1)}
                                     </span>
                                   )}
-                                  <span className="px-2 py-0.5 bg-[#111113] border border-[#27272A] font-mono text-[11px] text-[#A3E635]">
+                                  <span className="ui-badge ui-badge-accent font-mono">
                                     {offer.vehicle?.type ?? offer.vehicle_id} · {offer.vehicle_id}
                                   </span>
                                 </div>
                                 {offer.vehicle && (
-                                  <p className="font-mono text-[11px] text-[#71717A]">
+                                  <p className="font-mono text-xs text-[#6B7280]">
                                     {offer.vehicle.seats} seats · {offer.vehicle.large_bags}L / {offer.vehicle.small_bags}S bags · Status: {offer.status}
                                   </p>
                                 )}
                               </div>
 
                               <div className="text-right">
-                                <span className="font-mono text-sm font-semibold text-[#FAFAFA] block">
+                                <span className="font-mono text-base font-bold text-[#111827] block">
                                   {formatInr(offer.price_inr)}
                                 </span>
                                 <span
-                                  className={`font-mono text-[11px] block ${
+                                  className={`font-mono text-xs font-medium block ${
                                     offer.price_delta_inr <= 0
-                                      ? "text-[#A3E635]"
-                                      : "text-[#A1A1AA]"
+                                      ? "text-[#15803D]"
+                                      : "text-[#6B7280]"
                                   }`}
                                 >
                                   {offer.price_delta_inr === 0

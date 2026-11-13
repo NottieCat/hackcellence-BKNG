@@ -101,36 +101,36 @@ function App() {
   const uaeSuppliers = suppliers.filter((company) => !isJapanSupplier(company));
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#09090B] text-[#FAFAFA]">
-      <header className="sticky top-0 z-30 bg-[#111113] border-b border-[#27272A]">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
+    <div className="min-h-screen flex flex-col bg-white text-[#111827]">
+      <header className="sticky top-0 z-30 bg-white border-b border-[#E5E7EB]">
+        <div className="max-w-[1100px] mx-auto px-5 sm:px-8 h-18 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
             <button
               type="button"
               onClick={handleOpenHome}
-              className="ui-interactive ui-focus flex items-center gap-3 text-left cursor-pointer group"
+              className="ui-interactive ui-focus flex items-center gap-3 text-left cursor-pointer group rounded-[6px]"
             >
-              <div className="h-9 w-9 bg-[#18181B] border border-[#27272A] group-hover:border-[#A3E635] flex items-center justify-center text-[#A3E635] ui-interactive">
-                <CarTaxiFront className="h-4 w-4 stroke-[1.75]" />
+              <div className="h-10 w-10 rounded-[6px] bg-[#EFF6FF] border border-[#BFDBFE] group-hover:border-[#2563EB] flex items-center justify-center text-[#2563EB] ui-interactive">
+                <CarTaxiFront className="h-5 w-5 stroke-[1.75]" />
               </div>
               <div>
-                <span className="font-semibold text-sm tracking-tight text-[#FAFAFA] block">
+                <span className="font-bold text-base tracking-tight text-[#111827] block leading-tight">
                   AeroCab
                 </span>
-                <span className="text-[11px] text-[#71717A] block">
+                <span className="text-xs text-[#6B7280] block">
                   Airport Ride Offers
                 </span>
               </div>
             </button>
 
             {screen !== "home" && (
-              <div className="hidden sm:flex items-center gap-3 pl-4 border-l border-[#27272A] text-xs text-[#A1A1AA] truncate">
+              <div className="hidden sm:flex items-center gap-3 pl-4 border-l border-[#E5E7EB] text-sm font-medium text-[#6B7280] truncate">
                 {screen === "traveler" && <span>Traveler Portal</span>}
                 {screen === "supplier" && activeSupplier && (
                   <span>Supplier · {activeSupplier.name}</span>
                 )}
                 {screen === "booking" && (
-                  <span className="font-mono">Booking #{activeBookingNumber}</span>
+                  <span className="font-mono text-[#111827]">Booking #{activeBookingNumber}</span>
                 )}
               </div>
             )}
@@ -138,54 +138,54 @@ function App() {
 
           <div className="flex items-center gap-2.5">
             {screen === "supplier" && suppliers.length > 0 && (
-              <div className="hidden md:inline-flex items-center relative h-9 bg-[#18181B] border border-[#27272A] hover:border-[#3F3F46] ui-interactive">
+              <div className="hidden md:inline-flex items-center relative ui-input-wrap">
                 <select
                   aria-label="Switch supplier company"
                   value={selectedSupplierId}
                   onChange={(e) => handleChooseSupplier(e.target.value)}
-                  className="ui-focus h-full appearance-none bg-transparent pl-3 pr-8 text-xs font-medium text-[#FAFAFA] focus:outline-none cursor-pointer"
+                  className="h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm font-medium text-[#111827] focus:outline-none cursor-pointer"
                 >
                   {suppliers.map((company) => (
                     <option
                       key={company.company_id}
                       value={company.company_id}
-                      className="bg-[#18181B] text-[#FAFAFA]"
+                      className="bg-white text-[#111827]"
                     >
                       {company.name} ({company.airports.join(", ")})
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="h-3.5 w-3.5 text-[#71717A] absolute right-2.5 pointer-events-none" />
+                <ChevronDown className="h-4 w-4 text-[#6B7280] absolute right-3 pointer-events-none" />
               </div>
             )}
 
-            <form onSubmit={handleBookingLookupSubmit} className="flex items-center h-9">
-              <div className="relative flex items-center h-full">
-                <Search className="h-3.5 w-3.5 text-[#71717A] absolute left-3 pointer-events-none" />
+            <form onSubmit={handleBookingLookupSubmit} className="flex items-center gap-2">
+              <div className="relative flex items-center">
+                <Search className="h-4 w-4 text-[#6B7280] absolute left-3.5 pointer-events-none" />
                 <input
                   type="text"
                   value={bookingSearchInput}
                   onChange={(e) => setBookingSearchInput(e.target.value)}
                   placeholder="Booking # (10 digits)"
                   aria-label="10-digit booking number"
-                  className="ui-interactive ui-focus h-full w-40 sm:w-44 pl-8 pr-2.5 bg-[#09090B] border border-[#27272A] focus:border-[#A3E635] font-mono text-xs text-[#FAFAFA] placeholder:font-sans placeholder:text-[#71717A] focus:outline-none"
+                  className="ui-input w-44 sm:w-48 pl-9 pr-3 font-mono text-sm placeholder:font-sans placeholder:text-[#6B7280]"
                 />
-                <button
-                  type="submit"
-                  className="ui-interactive ui-focus h-full px-3 bg-[#18181B] border border-l-0 border-[#27272A] hover:bg-[#202024] hover:border-[#3F3F46] text-xs font-medium text-[#FAFAFA] cursor-pointer"
-                >
-                  Lookup
-                </button>
               </div>
+              <button
+                type="submit"
+                className="ui-btn-secondary ui-focus px-4 text-sm cursor-pointer"
+              >
+                Lookup
+              </button>
             </form>
 
             {screen !== "home" && (
               <button
                 type="button"
                 onClick={handleOpenHome}
-                className="ui-interactive ui-focus h-9 px-3 bg-[#18181B] border border-[#27272A] hover:bg-[#202024] hover:border-[#3F3F46] text-xs font-medium text-[#A1A1AA] hover:text-[#FAFAFA] inline-flex items-center gap-1.5 cursor-pointer"
+                className="ui-btn-secondary ui-focus px-3.5 text-sm inline-flex items-center gap-1.5 cursor-pointer"
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
+                <ArrowLeft className="h-4 w-4 text-[#6B7280]" />
                 <span className="hidden sm:inline">Switch Role</span>
               </button>
             )}
@@ -195,290 +195,294 @@ function App() {
               onClick={() => void loadCatalog()}
               title="Refresh data"
               aria-label="Refresh data"
-              className="ui-interactive ui-focus h-9 w-9 inline-flex items-center justify-center bg-[#18181B] border border-[#27272A] hover:bg-[#202024] hover:border-[#3F3F46] text-[#A1A1AA] hover:text-[#FAFAFA] cursor-pointer"
+              className="ui-btn-secondary ui-focus w-11 inline-flex items-center justify-center cursor-pointer"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin text-[#A3E635]" : ""}`} />
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin text-[#2563EB]" : "text-[#6B7280]"}`} />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-5 sm:px-8 py-10">
-        {syncError && (
-          <div className="mb-8 bg-[#18181B] border border-[#27272A] border-l-2 border-l-[#FBBF24] px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3 text-sm text-[#FAFAFA]">
-              <AlertCircle className="h-4 w-4 text-[#FBBF24] shrink-0" />
-              <span>{syncError}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => void loadCatalog()}
-              className="ui-interactive ui-focus px-3.5 py-1.5 bg-[#202024] border border-[#3F3F46] hover:border-[#A3E635] text-xs font-medium text-[#FAFAFA] cursor-pointer"
-            >
-              Try Again
-            </button>
-          </div>
-        )}
-
-        {screen === "home" && (
-          <section key="home-screen" className="panel-enter max-w-4xl mx-auto pt-4 sm:pt-10">
-            <div className="mb-10">
-              <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#A3E635] mb-2.5">
-                Airport Transfers · Japan &amp; UAE
-              </p>
-              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#FAFAFA]">
-                Choose how you want to continue
-              </h1>
-              <p className="text-sm sm:text-base text-[#A1A1AA] mt-2 max-w-xl leading-relaxed">
-                No sign-in required. Enter as a traveler to request an airport pickup at your price, or choose your taxi company to manage ride requests privately.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-[#18181B] border border-[#27272A] hover:border-[#3F3F46] p-7 flex flex-col justify-between min-h-[290px] ui-interactive">
-                <div>
-                  <div className="h-11 w-11 bg-[#111113] border border-[#27272A] flex items-center justify-center text-[#A3E635] mb-6">
-                    <PlaneLanding className="h-5 w-5 stroke-[1.75]" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-[#FAFAFA] tracking-tight">
-                    Traveler
-                  </h2>
-                  <p className="text-sm text-[#A1A1AA] mt-2.5 leading-relaxed">
-                    Select your arrival flight and hotel, see the suggested price range for your route, and book or reject offers from taxi suppliers.
-                  </p>
-                </div>
-
-                <div className="pt-6 mt-8 border-t border-[#27272A]">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#71717A] block mb-2">
-                    Passenger Portal
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleOpenTraveler}
-                    className="ui-interactive ui-focus group w-full h-11 px-4 bg-[#A3E635] hover:bg-[#BEF264] text-[#09090B] font-semibold text-sm flex items-center justify-between cursor-pointer"
-                  >
-                    <span>Enter Traveler Portal</span>
-                    <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
-                  </button>
-                </div>
+      <main className="flex-1 w-full bg-[#F8F9FB]">
+        <div className="max-w-[1100px] mx-auto px-5 sm:px-8 py-10 sm:py-12">
+          {syncError && (
+            <div className="mb-8 ui-alert-error px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3 text-sm text-[#991B1B]">
+                <AlertCircle className="h-5 w-5 text-[#DC2626] shrink-0" />
+                <span>{syncError}</span>
               </div>
-
-              <div className="bg-[#18181B] border border-[#27272A] hover:border-[#3F3F46] p-7 flex flex-col justify-between min-h-[290px] ui-interactive">
-                <div>
-                  <div className="h-11 w-11 bg-[#111113] border border-[#27272A] flex items-center justify-center text-[#A3E635] mb-6">
-                    <Building2 className="h-5 w-5 stroke-[1.75]" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-[#FAFAFA] tracking-tight">
-                    Taxi Supplier
-                  </h2>
-                  <p className="text-sm text-[#A1A1AA] mt-2.5 leading-relaxed">
-                    Select your company below to go directly to its private workspace — view matching ride requests, assign available cars, and handle flight changes.
-                  </p>
-                </div>
-
-                <div className="pt-6 mt-8 border-t border-[#27272A]">
-                  <label
-                    htmlFor="home-supplier-select"
-                    className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#71717A] block mb-2"
-                  >
-                    Select Supplier Company
-                  </label>
-                  <div className="relative h-11 bg-[#111113] border border-[#27272A] hover:border-[#A3E635] focus-within:border-[#A3E635] ui-interactive">
-                    <select
-                      id="home-supplier-select"
-                      value=""
-                      disabled={suppliers.length === 0}
-                      onChange={(e) => handleChooseSupplier(e.target.value)}
-                      className="ui-focus w-full h-full appearance-none bg-transparent pl-3.5 pr-10 text-sm font-medium text-[#FAFAFA] disabled:text-[#71717A] focus:outline-none cursor-pointer disabled:cursor-not-allowed"
-                    >
-                      <option value="" disabled className="bg-[#18181B] text-[#71717A]">
-                        {isSyncing && suppliers.length === 0
-                          ? "Loading companies..."
-                          : suppliers.length === 0
-                            ? "Waiting for backend catalog..."
-                            : "Choose your taxi company..."}
-                      </option>
-                      {japanSuppliers.length > 0 && (
-                        <optgroup
-                          label="Japan (NRT · HND · KIX)"
-                          className="bg-[#18181B] text-[#A1A1AA]"
-                        >
-                          {japanSuppliers.map((company) => (
-                            <option
-                              key={company.company_id}
-                              value={company.company_id}
-                              className="bg-[#18181B] text-[#FAFAFA]"
-                            >
-                              {company.name} ({company.airports.join(", ")})
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
-                      {uaeSuppliers.length > 0 && (
-                        <optgroup
-                          label="UAE (DXB · AUH)"
-                          className="bg-[#18181B] text-[#A1A1AA]"
-                        >
-                          {uaeSuppliers.map((company) => (
-                            <option
-                              key={company.company_id}
-                              value={company.company_id}
-                              className="bg-[#18181B] text-[#FAFAFA]"
-                            >
-                              {company.name} ({company.airports.join(", ")})
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
-                    </select>
-                    <ChevronDown className="h-4 w-4 text-[#A3E635] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => void loadCatalog()}
+                className="ui-btn-secondary ui-focus px-4 text-sm cursor-pointer"
+              >
+                Try Again
+              </button>
             </div>
-          </section>
-        )}
+          )}
 
-        {screen === "traveler" && (
-          <TravelerWorkspace
-            bootstrap={bootstrap}
-            onOpenBooking={handleOpenBookingByNumber}
-            onCatalogRefresh={() => void loadCatalog()}
-          />
-        )}
-
-        {screen === "supplier" && (
-          <section key="supplier-screen" className="panel-enter space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#27272A] pb-5">
-              <div>
-                <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#A3E635] mb-1.5">
-                  Supplier Workspace · {activeSupplier?.company_id}
+          {screen === "home" && (
+            <section key="home-screen" className="panel-enter py-4 sm:py-8">
+              <div className="text-center max-w-2xl mx-auto mb-12">
+                <p className="inline-block ui-badge ui-badge-accent mb-3 uppercase tracking-wider">
+                  Airport Transfers · Japan &amp; UAE
                 </p>
-                <h1 className="text-2xl font-semibold tracking-tight text-[#FAFAFA]">
-                  {activeSupplier ? activeSupplier.name : "Supplier Dashboard"}
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111827]">
+                  Choose how you want to continue
                 </h1>
+                <p className="text-base text-[#6B7280] mt-3 leading-relaxed">
+                  No sign-in required. Enter as a traveler to request an airport pickup at your price, or choose your taxi company to manage ride requests privately.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="ui-card ui-card-hover flex flex-col justify-between min-h-[320px]">
+                  <div>
+                    <div className="h-12 w-12 rounded-[8px] bg-[#EFF6FF] border border-[#BFDBFE] flex items-center justify-center text-[#2563EB] mb-6">
+                      <PlaneLanding className="h-6 w-6 stroke-[1.75]" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-[#111827] tracking-tight">
+                      Traveler
+                    </h2>
+                    <p className="text-base text-[#6B7280] mt-3 leading-relaxed">
+                      Select your arrival flight and hotel, see the suggested price range for your route, and book or reject offers from taxi suppliers.
+                    </p>
+                  </div>
+
+                  <div className="pt-6 mt-8 border-t border-[#E5E7EB]">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[#6B7280] block mb-2">
+                      Passenger Portal
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleOpenTraveler}
+                      className="ui-btn-primary ui-focus group w-full px-5 text-base flex items-center justify-between cursor-pointer"
+                    >
+                      <span>Enter Traveler Portal</span>
+                      <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="ui-card ui-card-hover flex flex-col justify-between min-h-[320px]">
+                  <div>
+                    <div className="h-12 w-12 rounded-[8px] bg-[#F8F9FB] border border-[#E5E7EB] flex items-center justify-center text-[#2563EB] mb-6">
+                      <Building2 className="h-6 w-6 stroke-[1.75]" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-[#111827] tracking-tight">
+                      Taxi Supplier
+                    </h2>
+                    <p className="text-base text-[#6B7280] mt-3 leading-relaxed">
+                      Select your company below to go directly to its private workspace — view matching ride requests, assign available cars, and handle flight changes.
+                    </p>
+                  </div>
+
+                  <div className="pt-6 mt-8 border-t border-[#E5E7EB]">
+                    <label
+                      htmlFor="home-supplier-select"
+                      className="text-xs font-semibold uppercase tracking-wider text-[#6B7280] block mb-2"
+                    >
+                      Select Supplier Company
+                    </label>
+                    <div className="relative ui-input-wrap">
+                      <select
+                        id="home-supplier-select"
+                        value=""
+                        disabled={suppliers.length === 0}
+                        onChange={(e) => handleChooseSupplier(e.target.value)}
+                        className="w-full h-full appearance-none bg-transparent pl-3.5 pr-10 text-base font-medium text-[#111827] disabled:text-[#6B7280] focus:outline-none cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        <option value="" disabled className="bg-white text-[#6B7280]">
+                          {isSyncing && suppliers.length === 0
+                            ? "Loading companies..."
+                            : suppliers.length === 0
+                              ? "Waiting for backend catalog..."
+                              : "Choose your taxi company..."}
+                        </option>
+                        {japanSuppliers.length > 0 && (
+                          <optgroup
+                            label="Japan (NRT · HND · KIX)"
+                            className="bg-white text-[#6B7280]"
+                          >
+                            {japanSuppliers.map((company) => (
+                              <option
+                                key={company.company_id}
+                                value={company.company_id}
+                                className="bg-white text-[#111827]"
+                              >
+                                {company.name} ({company.airports.join(", ")})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {uaeSuppliers.length > 0 && (
+                          <optgroup
+                            label="UAE (DXB · AUH)"
+                            className="bg-white text-[#6B7280]"
+                          >
+                            {uaeSuppliers.map((company) => (
+                              <option
+                                key={company.company_id}
+                                value={company.company_id}
+                                className="bg-white text-[#111827]"
+                              >
+                                {company.name} ({company.airports.join(", ")})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </select>
+                      <ChevronDown className="h-4 w-4 text-[#2563EB] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {screen === "traveler" && (
+            <TravelerWorkspace
+              bootstrap={bootstrap}
+              onOpenBooking={handleOpenBookingByNumber}
+              onCatalogRefresh={() => void loadCatalog()}
+            />
+          )}
+
+          {screen === "supplier" && (
+            <section key="supplier-screen" className="panel-enter space-y-6">
+              <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#E5E7EB] pb-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB] mb-1.5">
+                    Supplier Workspace · {activeSupplier?.company_id}
+                  </p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827]">
+                    {activeSupplier ? activeSupplier.name : "Supplier Dashboard"}
+                  </h1>
+                </div>
+
+                {activeSupplier && (
+                  <div className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
+                    <span className="px-3.5 py-2 rounded-[6px] bg-white border border-[#E5E7EB] text-[#111827] inline-flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-[#2563EB]" />
+                      Hours: {activeSupplier.service_from}–{activeSupplier.service_until}
+                    </span>
+                    <span className="px-3.5 py-2 rounded-[6px] bg-white border border-[#E5E7EB] text-[#111827] inline-flex items-center gap-1.5">
+                      <Star className="h-4 w-4 text-[#F59E0B] fill-[#F59E0B]" />
+                      {activeSupplier.rating.toFixed(1)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {activeSupplier && (
-                <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
-                  <span className="px-3 py-1.5 bg-[#18181B] border border-[#27272A] text-[#FAFAFA] inline-flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-[#A3E635]" />
-                    Hours: {activeSupplier.service_from}–{activeSupplier.service_until}
-                  </span>
-                  <span className="px-3 py-1.5 bg-[#18181B] border border-[#27272A] text-[#FAFAFA] inline-flex items-center gap-1.5">
-                    <Star className="h-3.5 w-3.5 text-[#A3E635] fill-[#A3E635]" />
-                    {activeSupplier.rating.toFixed(1)}
-                  </span>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="ui-card ui-card-hover space-y-5">
+                    <h2 className="text-lg font-semibold text-[#111827] flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-[#2563EB]" />
+                      Service Coverage
+                    </h2>
+                    <div>
+                      <span className="text-sm font-medium text-[#6B7280] block mb-2">Pickup Airports</span>
+                      <div className="flex flex-wrap gap-2">
+                        {activeSupplier.airports.map((code) => (
+                          <span
+                            key={code}
+                            className="ui-badge ui-badge-accent font-mono"
+                          >
+                            {code}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-[#6B7280] block mb-2">
+                        Hotel Drop-off Areas ({activeSupplier.areas.length})
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {activeSupplier.areas.map((zone) => (
+                          <span
+                            key={`${zone.city}-${zone.area}`}
+                            className="ui-badge ui-badge-neutral"
+                          >
+                            {zone.city} · {zone.area}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-2 ui-card ui-card-hover">
+                    <h2 className="text-lg font-semibold text-[#111827] mb-4">
+                      Company Fleet ({activeSupplier.vehicles.length} cars)
+                    </h2>
+                    <div className="border border-[#E5E7EB] rounded-[8px] overflow-hidden overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-[#F8F9FB] border-b border-[#E5E7EB] text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+                            <th className="py-3 px-4">Vehicle ID</th>
+                            <th className="py-3 px-4">Type</th>
+                            <th className="py-3 px-4">Seats</th>
+                            <th className="py-3 px-4">Large Bags</th>
+                            <th className="py-3 px-4">Small Bags</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E5E7EB] text-sm">
+                          {activeSupplier.vehicles.map((car) => (
+                            <tr key={car.vehicle_id} className="ui-interactive hover:bg-[#F8F9FB]">
+                              <td className="py-3.5 px-4 font-mono font-semibold text-[#111827]">
+                                {car.vehicle_id}
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <span className="ui-badge ui-badge-accent font-mono">
+                                  {car.type}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 font-mono text-[#6B7280]">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Users className="h-4 w-4 text-[#6B7280]" />
+                                  {car.seats}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 font-mono text-[#6B7280]">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Luggage className="h-4 w-4 text-[#6B7280]" />
+                                  {car.large_bags}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 font-mono text-[#6B7280]">
+                                {car.small_bags}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
+            </section>
+          )}
 
-            {activeSupplier && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="bg-[#18181B] border border-[#27272A] p-5 space-y-4">
-                  <h2 className="text-sm font-semibold text-[#FAFAFA] flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-[#A3E635]" />
-                    Service Coverage
-                  </h2>
-                  <div>
-                    <span className="text-xs text-[#71717A] block mb-2">Pickup Airports</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {activeSupplier.airports.map((code) => (
-                        <span
-                          key={code}
-                          className="px-2.5 py-1 bg-[#111113] border border-[#27272A] font-mono text-xs text-[#FAFAFA]"
-                        >
-                          {code}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-xs text-[#71717A] block mb-2">
-                      Hotel Drop-off Areas ({activeSupplier.areas.length})
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {activeSupplier.areas.map((zone) => (
-                        <span
-                          key={`${zone.city}-${zone.area}`}
-                          className="px-2.5 py-1 bg-[#111113] border border-[#27272A] text-xs text-[#A1A1AA]"
-                        >
-                          {zone.city} · {zone.area}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-2 bg-[#18181B] border border-[#27272A] p-5">
-                  <h2 className="text-sm font-semibold text-[#FAFAFA] mb-4">
-                    Company Fleet ({activeSupplier.vehicles.length} cars)
-                  </h2>
-                  <div className="border border-[#27272A] overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-[#111113] border-b border-[#27272A] text-xs font-medium text-[#A1A1AA]">
-                          <th className="py-2.5 px-4">Vehicle ID</th>
-                          <th className="py-2.5 px-4">Type</th>
-                          <th className="py-2.5 px-4">Seats</th>
-                          <th className="py-2.5 px-4">Large Bags</th>
-                          <th className="py-2.5 px-4">Small Bags</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#27272A] text-sm">
-                        {activeSupplier.vehicles.map((car) => (
-                          <tr key={car.vehicle_id} className="ui-interactive hover:bg-[#202024]">
-                            <td className="py-3 px-4 font-mono text-xs font-medium text-[#FAFAFA]">
-                              {car.vehicle_id}
-                            </td>
-                            <td className="py-3 px-4 font-mono text-xs text-[#A3E635]">
-                              {car.type}
-                            </td>
-                            <td className="py-3 px-4 font-mono text-xs text-[#A1A1AA]">
-                              <span className="inline-flex items-center gap-1.5">
-                                <Users className="h-3.5 w-3.5 text-[#71717A]" />
-                                {car.seats}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 font-mono text-xs text-[#A1A1AA]">
-                              <span className="inline-flex items-center gap-1.5">
-                                <Luggage className="h-3.5 w-3.5 text-[#71717A]" />
-                                {car.large_bags}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 font-mono text-xs text-[#A1A1AA]">
-                              {car.small_bags}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+          {screen === "booking" && (
+            <section key="booking-screen" className="panel-enter space-y-6">
+              <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#E5E7EB] pb-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB] mb-1.5">
+                    Booking Summary
+                  </p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827] font-mono">
+                    Booking #{activeBookingNumber}
+                  </h1>
                 </div>
               </div>
-            )}
-          </section>
-        )}
-
-        {screen === "booking" && (
-          <section key="booking-screen" className="panel-enter space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#27272A] pb-5">
-              <div>
-                <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#A3E635] mb-1.5">
-                  Booking Summary
+              <div className="ui-card">
+                <p className="text-base text-[#6B7280]">
+                  10-digit booking details and flight/pickup change requests will mount here in Step 9.
                 </p>
-                <h1 className="text-2xl font-semibold tracking-tight text-[#FAFAFA] font-mono">
-                  Booking #{activeBookingNumber}
-                </h1>
               </div>
-            </div>
-            <div className="bg-[#18181B] border border-[#27272A] p-6">
-              <p className="text-sm text-[#A1A1AA]">
-                10-digit booking details and flight/pickup change requests will mount here in Step 9.
-              </p>
-            </div>
-          </section>
-        )}
+            </section>
+          )}
+        </div>
       </main>
     </div>
   );

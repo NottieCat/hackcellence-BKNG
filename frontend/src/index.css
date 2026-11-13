@@ -1,33 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #09090b;
-  --bg-secondary: #111113;
-  --bg-surface: #18181b;
-  --bg-elevated: #202024;
-  --border-subtle: #27272a;
-  --border-strong: #3f3f46;
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --accent: #a3e635;
-  --accent-muted: rgba(163, 230, 53, 0.12);
-  --danger: #f87171;
-  --warning: #fbbf24;
-  --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);
+  --bg-page: #ffffff;
+  --bg-section: #f8f9fb;
+  --bg-card: #ffffff;
+  --border-light: #e5e7eb;
+  --border-input: #d1d5db;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-ring: rgba(37, 99, 235, 0.16);
 }
 
 @layer base {
   *,
   *::before,
   *::after {
-    border-radius: 0px !important;
     box-sizing: border-box;
   }
 
   html {
-    color-scheme: dark;
-    background-color: var(--bg-primary);
+    color-scheme: light !important;
+    font-size: 16px;
+    background-color: var(--bg-page);
     color: var(--text-primary);
     scroll-behavior: smooth;
   }
@@ -35,10 +31,11 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background-color: var(--bg-primary);
+    background-color: var(--bg-page);
     color: var(--text-primary);
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -56,16 +53,22 @@
     flex-direction: column;
   }
 
+  input,
+  select,
+  textarea {
+    color-scheme: light;
+  }
+
   ::selection {
-    background-color: var(--accent);
-    color: #09090b;
+    background-color: rgba(37, 99, 235, 0.16);
+    color: #111827;
   }
 }
 
 @keyframes panelFadeIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(3px);
   }
   to {
     opacity: 1;
@@ -73,37 +76,184 @@
   }
 }
 
-@keyframes skeletonSweep {
+@keyframes skeletonPulse {
   0% {
-    opacity: 0.45;
+    opacity: 0.55;
   }
   50% {
-    opacity: 0.85;
+    opacity: 1;
   }
   100% {
-    opacity: 0.45;
+    opacity: 0.55;
   }
 }
 
 .panel-enter {
-  animation: panelFadeIn 180ms var(--ease-out-quart) both;
+  animation: panelFadeIn 150ms ease-out both;
 }
 
 .skeleton-bar {
-  background-color: var(--bg-elevated);
-  animation: skeletonSweep 1.4s ease-in-out infinite;
+  background-color: #eef0f4;
+  border-radius: 6px;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
 }
 
 .ui-interactive {
   transition:
-    background-color 160ms var(--ease-out-quart),
-    border-color 160ms var(--ease-out-quart),
-    color 160ms var(--ease-out-quart);
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.ui-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.ui-card-hover {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.ui-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.06);
+  border-color: #d1d5db;
+}
+
+.ui-btn-primary {
+  height: 44px;
+  border-radius: 6px;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.ui-btn-primary:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.ui-btn-secondary {
+  height: 44px;
+  border-radius: 6px;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #111827;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.ui-btn-secondary:hover:not(:disabled) {
+  background-color: #f8f9fb;
+  border-color: #9ca3af;
+}
+
+.ui-input {
+  height: 44px;
+  border-radius: 6px;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #111827;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.ui-input:focus,
+.ui-input-wrap:focus-within {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.ui-input-wrap {
+  height: 44px;
+  border-radius: 6px;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .ui-focus:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: -1px;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.ui-badge-booked {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.ui-badge-pending {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.ui-badge-rejected {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.ui-badge-neutral {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.ui-badge-accent {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.ui-alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #dc2626;
+  border-radius: 6px;
+}
+
+.ui-alert-success {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
+  border-radius: 6px;
+}
+
+.ui-alert-warning {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid #d97706;
+  border-radius: 6px;
+}
+
+.ui-alert-info {
+  background-color: #f8f9fb;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #2563eb;
+  border-radius: 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -116,7 +266,12 @@
     animation: none !important;
   }
 
-  .ui-interactive {
+  .ui-interactive,
+  .ui-card-hover,
+  .ui-btn-primary,
+  .ui-btn-secondary,
+  .ui-input,
+  .ui-input-wrap {
     transition: none !important;
   }
 }
