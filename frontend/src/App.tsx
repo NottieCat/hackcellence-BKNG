@@ -18,6 +18,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { ApiRuleError, fetchBootstrap } from "./api/client";
 import type { BootstrapData, SupplierCompany } from "./api/client";
+import { TravelerWorkspace } from "./pages/TravelerWorkspace";
 
 type ScreenMode = "home" | "traveler" | "supplier" | "booking";
 
@@ -85,6 +86,12 @@ function App() {
       return;
     }
     setActiveBookingNumber(trimmed);
+    setScreen("booking");
+  }
+
+  function handleOpenBookingByNumber(bookingNumber: string): void {
+    setBookingSearchInput(bookingNumber);
+    setActiveBookingNumber(bookingNumber);
     setScreen("booking");
   }
 
@@ -333,37 +340,11 @@ function App() {
         )}
 
         {screen === "traveler" && (
-          <section key="traveler-screen" className="panel-enter space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#27272A] pb-5">
-              <div>
-                <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#A3E635] mb-1.5">
-                  Traveler Workspace
-                </p>
-                <h1 className="text-2xl font-semibold tracking-tight text-[#FAFAFA]">
-                  Request an Airport Ride
-                </h1>
-                <p className="text-sm text-[#A1A1AA] mt-1">
-                  Post a ride request with your price and compare assigned cars from taxi suppliers.
-                </p>
-              </div>
-              {bootstrap && (
-                <div className="flex items-center gap-3 text-xs text-[#A1A1AA] font-mono">
-                  <span className="px-3 py-1.5 bg-[#18181B] border border-[#27272A]">
-                    {bootstrap.flights.length} flights available
-                  </span>
-                  <span className="px-3 py-1.5 bg-[#18181B] border border-[#27272A]">
-                    {bootstrap.hotels.length} hotels
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-[#18181B] border border-[#27272A] p-6">
-              <p className="text-sm text-[#A1A1AA]">
-                Ready for Step 7: the interactive Ride Request form and My Requests &amp; Offers list will mount right here.
-              </p>
-            </div>
-          </section>
+          <TravelerWorkspace
+            bootstrap={bootstrap}
+            onOpenBooking={handleOpenBookingByNumber}
+            onCatalogRefresh={() => void loadCatalog()}
+          />
         )}
 
         {screen === "supplier" && (

@@ -1,6 +1,6 @@
 export type CarType = "HATCHBACK" | "SEDAN" | "SUV" | "BUS";
-
-export type ActiveView = "traveler" | "supplier" | "booking";
+export type RequestStatus = "OPEN" | "BOOKED";
+export type OfferStatus = "OPEN" | "BOOKED" | "REJECTED" | "NOT_CHOSEN" | "EXPIRED";
 
 export interface Airport {
   code: string;
@@ -79,6 +79,130 @@ export interface HealthData {
   dataDirectoryReady: boolean;
 }
 
+export interface RouteQuoteData {
+  flight: Flight;
+  hotel: Hotel;
+  airport: Airport;
+  route: RouteInfo;
+  earliest_pickup: string;
+  price_min_inr: number;
+  price_max_inr: number;
+  drive_minutes: number;
+  distance_km: number;
+}
+
+export interface ServabilityInfo {
+  servable_count: number;
+  servable_company_ids: string[];
+  unservable_reasons: string[];
+}
+
+export interface EnrichedRideRequest {
+  request_id: string;
+  traveler_name: string;
+  flight_id: string;
+  hotel_id: string;
+  adults: number;
+  child_ages: number[];
+  large_bags: number;
+  small_bags: number;
+  pickup: string;
+  car_type: CarType | null;
+  price_inr: number;
+  status: RequestStatus;
+  created_at: string;
+  flight: Flight | null;
+  hotel: Hotel | null;
+  route: RouteInfo | null;
+  busy_window: { start: string; end: string } | null;
+  open_offers_count: number;
+  total_offers_count: number;
+  booking_number: string | null;
+  servability: ServabilityInfo;
+}
+
+export interface CreateRideRequestInput {
+  traveler_name: string;
+  flight_id: string;
+  hotel_id: string;
+  adults: number;
+  child_ages: number[];
+  large_bags: number;
+  small_bags: number;
+  pickup?: string;
+  car_type?: string | null;
+  price_inr: number;
+}
+
+export interface CreatedRideRequestResponse {
+  request: {
+    request_id: string;
+    traveler_name: string;
+    flight_id: string;
+    hotel_id: string;
+    adults: number;
+    child_ages: number[];
+    large_bags: number;
+    small_bags: number;
+    pickup: string;
+    car_type: CarType | null;
+    price_inr: number;
+    status: RequestStatus;
+  };
+  flight: Flight;
+  hotel: Hotel;
+  route: RouteInfo;
+  busy_window: { start: string; end: string };
+  servability: ServabilityInfo;
+}
+
+export interface EnrichedTaxiOffer {
+  offer_id: string;
+  request_id: string;
+  company_id: string;
+  company_name: string;
+  company_rating: number | null;
+  vehicle_id: string;
+  vehicle: Vehicle | null;
+  price_inr: number;
+  price_delta_inr: number;
+  expires_at: string | null;
+  status: OfferStatus;
+  car_currently_free: boolean;
+  conflict_reason: string | null;
+  created_at: string;
+}
+
+export interface RequestDetailData {
+  request: {
+    request_id: string;
+    traveler_name: string;
+    flight_id: string;
+    hotel_id: string;
+    adults: number;
+    child_ages: number[];
+    large_bags: number;
+    small_bags: number;
+    pickup: string;
+    car_type: CarType | null;
+    price_inr: number;
+    status: RequestStatus;
+  };
+  flight: Flight;
+  hotel: Hotel;
+  route: RouteInfo;
+  busy_window: { start: string; end: string };
+  booking: {
+    booking_number: string;
+    company_id: string;
+    vehicle_id: string;
+    price_inr: number;
+    pickup: string;
+  } | null;
+  servability: ServabilityInfo;
+  offers: EnrichedTaxiOffer[];
+}
+
 export interface RuleErrorPayload {
   rule?: string;
   code: string;
@@ -149,4 +273,41 @@ export function fetchHealth(): Promise<HealthData> {
 
 export function fetchBootstrap(): Promise<BootstrapData> {
   return apiRequest<BootstrapData>("/api/catalog/bootstrap");
+}
+
+export function fetchRouteQuote(flightId: string, hotelId: string): Promise<RouteQuoteData> {
+  const params = new URLSearchParams({
+    flightId,
+    hotelId
+  });
+  return apiRequest<RouteQuoteData>(`/api/routes/quote?${params.toString()}`);
+}
+
+export function fetchRideRequests(): Promise<{ requests: EnrichedRideRequest[] }> {
+  return apiRequest<{ requests: EnrichedRideRequest[] }>("/api/requests");
+}
+
+export function createRideRequest(
+  payload: CreateRideRequestInput
+): Promise<CreatedRideRequestResponse> {
+  return apiRequest<CreatedRideRequestResponse>("/api/requests", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function fetchRequestDetail(
+  requestId: string,
+  options?: { sort?: string; carType?: string }
+): Promise<RequestDetailData> {
+  const params = new URLSearchParams();
+  if (options?.sort) {
+    params.set("sort", options.sort);
+  }
+  if (options?.carType) {
+    params.set("carType", options.carType);
+  }
+  const qs = params.toString();
+  const suffix = qs ? `?${qs}` : "";
+  return apiRequest<RequestDetailData>(`/api/requests/${encodeURIComponent(requestId)}${suffix}`);
 }
