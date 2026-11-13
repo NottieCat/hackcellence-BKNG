@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowRight,
@@ -11,7 +12,9 @@ import {
   MapPin,
   PlaneLanding,
   RefreshCw,
+  ShieldCheck,
   Star,
+  Ticket,
   Users,
   XCircle
 } from "lucide-react";
@@ -28,11 +31,19 @@ import type {
   SupplierDashboardData,
   SupplierServableRequest
 } from "../api/client";
+import {
+  ClickSparkButton,
+  NudgeAlert,
+  SpotlightCard
+} from "../components/ui/MotionPrimitives";
 
 interface SupplierWorkspaceProps {
   companyId: string;
+  allSuppliers?: SupplierCompany[];
   fallbackCompany: SupplierCompany | null;
+  onSelectSupplier?: (companyId: string) => void;
   onOpenBooking: (bookingNumber: string) => void;
+  onSwitchToTraveler?: () => void;
   onCatalogRefresh?: () => void;
 }
 
@@ -72,6 +83,22 @@ function getOfferBadgeClass(status: string): string {
   return "ui-badge ui-badge-open";
 }
 
+function formatOfferStatusText(status: string): string {
+  if (status === "BOOKED") {
+    return "Booked";
+  }
+  if (status === "REJECTED") {
+    return "Declined";
+  }
+  if (status === "NOT_CHOSEN") {
+    return "Not chosen";
+  }
+  if (status === "EXPIRED") {
+    return "Expired";
+  }
+  return "Sent";
+}
+
 function buildInitialDraft(item: SupplierServableRequest): OfferDraft {
   const preferredVehicle =
     item.vehicle_evaluations.find((ev) => ev.eligible && !ev.already_offered_open) ??
@@ -87,8 +114,11 @@ function buildInitialDraft(item: SupplierServableRequest): OfferDraft {
 
 export function SupplierWorkspace({
   companyId,
+  allSuppliers = [],
   fallbackCompany,
+  onSelectSupplier,
   onOpenBooking,
+  onSwitchToTraveler,
   onCatalogRefresh
 }: SupplierWorkspaceProps) {
   const [dashboard, setDashboard] = useState<SupplierDashboardData | null>(null);
@@ -98,10 +128,12 @@ export function SupplierWorkspace({
   const [drafts, setDrafts] = useState<Record<string, OfferDraft>>({});
   const [submittingReqId, setSubmittingReqId] = useState<string | null>(null);
   const [offerErrors, setOfferErrors] = useState<Record<string, FeedbackBanner | null>>({});
+  const [offerErrorSeq, setOfferErrorSeq] = useState<Record<string, number>>({});
   const [offerSuccess, setOfferSuccess] = useState<Record<string, string | null>>({});
 
   const [decidingChangeId, setDecidingChangeId] = useState<string | null>(null);
   const [changeErrors, setChangeErrors] = useState<Record<string, FeedbackBanner | null>>({});
+  const [changeErrorSeq, setChangeErrorSeq] = useState<Record<string, number>>({});
   const [changeNotice, setChangeNotice] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async () => {
@@ -132,7 +164,7 @@ export function SupplierWorkspace({
         setLoadError(err.message);
       }
       else {
-        setLoadError("Unable to load supplier dashboard from backend.");
+        setLoadError("Unable to load operator workspace right now.");
       }
     }
     finally {
@@ -192,7 +224,7 @@ export function SupplierWorkspace({
 
       setOfferSuccess((prev) => ({
         ...prev,
-        [reqId]: `Assigned ${response.offer.vehicle_id} at ${formatInr(response.offer.price_inr)} (${response.offer.offer_id}).`
+        [reqId]: `Quote sent: Vehicle ${response.offer.vehicle_id} offered at ${formatInr(response.offer.price_inr)}.`
       }));
 
       const refreshed = await fetchSupplierDashboard(companyId);
@@ -221,6 +253,7 @@ export function SupplierWorkspace({
       }
     }
     catch (err) {
+      setOfferErrorSeq((prev) => ({ ...prev, [reqId]: (prev[reqId] ?? 0) + 1 }));
       if (err instanceof ApiRuleError) {
         setOfferErrors((prev) => ({
           ...prev,
@@ -236,7 +269,7 @@ export function SupplierWorkspace({
           ...prev,
           [reqId]: {
             code: "NETWORK_ERROR",
-            message: "Could not submit taxi offer to backend."
+            message: "Could not send vehicle quote right now."
           }
         }));
       }
@@ -258,8 +291,8 @@ export function SupplierWorkspace({
       const result = await decideChangeRequest(changeId, decision);
       setChangeNotice(
         decision === "ACCEPT"
-          ? `Change request ${changeId} accepted. Booking #${result.booking.booking_number} updated to pickup ${formatDateTimeLabel(result.booking.pickup)}.`
-          : `Change request ${changeId} rejected. Original booking #${result.booking.booking_number} kept unchanged.`
+          ? `Schedule update approved. Pass #${result.booking.booking_number} moved to ${formatDateTimeLabel(result.booking.pickup)}.`
+          : `Schedule update declined. Pass #${result.booking.booking_number} remains on its original schedule.`
       );
       await loadDashboard();
       if (onCatalogRefresh) {
@@ -267,6 +300,7 @@ export function SupplierWorkspace({
       }
     }
     catch (err) {
+      setChangeErrorSeq((prev) => ({ ...prev, [changeId]: (prev[changeId] ?? 0) + 1 }));
       if (err instanceof ApiRuleError) {
         setChangeErrors((prev) => ({
           ...prev,
@@ -282,7 +316,7 @@ export function SupplierWorkspace({
           ...prev,
           [changeId]: {
             code: "DECISION_FAILED",
-            message: "Unable to process change request decision."
+            message: "Unable to process schedule update decision."
           }
         }));
       }
@@ -300,77 +334,117 @@ export function SupplierWorkspace({
   const myOffers = dashboard?.my_offers ?? [];
 
   return (
-    <section className="panel-enter space-y-8">
+    <section className="space-y-7">
       <div className="ui-card ui-top-teal flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-start gap-4">
           <div className="h-12 w-12 ui-icon-circle ui-icon-teal border border-[#99F6E4] mt-0.5">
             <Building2 className="h-6 w-6 stroke-[1.8]" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#0F766E] mb-1">
-              Supplier Workspace · {company?.company_id ?? companyId}
-            </p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
-              {company ? company.name : "Supplier Dashboard"}
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#0D9488] block mb-1">
+              Operator Dispatch Desk · {company?.company_id ?? companyId}
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A]">
+              {company ? company.name : "Fleet Workspace"}
             </h1>
-            <p className="text-base text-[#64748B] mt-1">
-              Review open ride requests your fleet can serve (R4), assign cars with your price (R7), and manage booking changes (R9).
+            <p className="text-sm sm:text-base text-[#475569] mt-1">
+              View ride requests matching your airports, drop-off zones, and operating hours. Assign available vehicles with custom fares.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {allSuppliers.length > 0 && onSelectSupplier && (
+            <div className="lg:hidden relative h-10 rounded-[9px] bg-[#F0FDFA] border border-[#99F6E4]">
+              <select
+                aria-label="Switch fleet operator"
+                value={companyId}
+                onChange={(e) => onSelectSupplier(e.target.value)}
+                className="h-full appearance-none bg-transparent pl-3 pr-8 text-xs font-semibold text-[#0F766E] focus:outline-none cursor-pointer"
+              >
+                {allSuppliers.map((sup) => (
+                  <option
+                    key={sup.company_id}
+                    value={sup.company_id}
+                    className="bg-white text-[#0F172A]"
+                  >
+                    {sup.name} ({sup.airports.join(", ")})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="h-3.5 w-3.5 text-[#0F766E] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          )}
+
           {company && (
             <>
-              <span className="h-11 px-3.5 rounded-[6px] bg-[#F0FDFA] border border-[#99F6E4] text-sm font-medium text-[#0F766E] inline-flex items-center gap-2">
-                <Clock className="h-4 w-4 text-[#0F766E]" />
-                Hours: {company.service_from}–{company.service_until}
+              <span className="h-10 px-3.5 rounded-[9px] bg-[#F0FDFA] border border-[#99F6E4] text-xs sm:text-sm font-semibold text-[#0F766E] inline-flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#0D9488]" />
+                <span>
+                  {company.service_from}–{company.service_until}
+                </span>
               </span>
-              <span className="h-11 px-3.5 rounded-[6px] bg-[#FFFBEB] border border-[#FDE68A] text-sm font-semibold text-[#B45309] inline-flex items-center gap-1.5">
+              <span className="h-10 px-3 rounded-[9px] bg-[#FFFBEB] border border-[#FDE68A] text-xs sm:text-sm font-semibold text-[#B45309] inline-flex items-center gap-1.5 font-mono">
                 <Star className="h-4 w-4 text-[#F59E0B] fill-[#F59E0B]" />
-                {company.rating.toFixed(1)}
+                <span>{company.rating.toFixed(1)}</span>
               </span>
             </>
           )}
+
           <button
             type="button"
             onClick={() => void loadDashboard()}
-            className="ui-btn-secondary ui-focus px-4 text-sm inline-flex items-center gap-2 cursor-pointer"
+            className="ui-btn-ghost ui-focus-teal px-3.5 text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin text-[#0F766E]" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${
+                isLoading ? "animate-spin text-[#0D9488]" : "text-[#475569]"
+              }`}
+            />
             <span>Refresh</span>
           </button>
         </div>
       </div>
 
       {loadError && (
-        <div className="ui-alert-error p-4 text-sm text-[#991B1B]">
+        <div className="ui-alert-error p-4 text-sm text-[#BE123C]">
           {loadError}
         </div>
       )}
 
-      {changeNotice && (
-        <div className="ui-alert-success p-4 flex items-start gap-2.5">
-          <CheckCircle2 className="h-5 w-5 text-[#16A34A] shrink-0 mt-0.5" />
-          <p className="text-sm text-[#166534]">{changeNotice}</p>
-        </div>
-      )}
+      <AnimatePresence>
+        {changeNotice && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="ui-alert-success p-4 flex items-start gap-2.5"
+          >
+            <CheckCircle2 className="h-5 w-5 text-[#059669] shrink-0 mt-0.5" />
+            <p className="text-sm text-[#065F46]">{changeNotice}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {pendingChanges.length > 0 && (
         <div className="ui-card ui-top-amber space-y-4">
-          <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E5E9F2] pb-4">
             <div className="flex items-center gap-2.5">
               <span className="h-8 w-8 ui-icon-circle ui-icon-amber">
                 <CalendarClock className="h-4 w-4" />
               </span>
-              <h2 className="text-lg font-bold text-[#0F172A]">
-                Pending Flight &amp; Pickup Change Requests
-              </h2>
-              <span className="ui-badge ui-badge-pending">
-                {pendingChanges.length} pending
-              </span>
+              <div>
+                <h2 className="text-lg font-bold text-[#0F172A]">
+                  Passenger Flight &amp; Pickup Updates
+                </h2>
+                <p className="text-xs text-[#64748B]">
+                  Approving verifies your assigned vehicle is free at the updated arrival window.
+                </p>
+              </div>
             </div>
-            <span className="text-xs font-mono text-[#64748B]">Rule R9 · M7</span>
+            <span className="ui-badge ui-badge-pending">
+              {pendingChanges.length} awaiting review
+            </span>
           </div>
 
           <div className="space-y-4">
@@ -381,39 +455,40 @@ export function SupplierWorkspace({
               return (
                 <div
                   key={chg.change_id}
-                  className="bg-[#FFFBEB]/60 border border-[#FDE68A] rounded-[8px] p-5 space-y-4"
+                  className="bg-[#FFFBEB]/65 border border-[#FDE68A] rounded-[12px] p-5 space-y-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-[6px] bg-white border border-[#FDE68A] text-[#92400E]">
+                      <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-[7px] bg-white border border-[#FDE68A] text-[#92400E]">
                         {chg.change_id}
                       </span>
                       <button
                         type="button"
                         onClick={() => onOpenBooking(chg.booking_number)}
-                        className="font-mono text-sm font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline cursor-pointer"
+                        className="font-mono text-xs sm:text-sm font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline inline-flex items-center gap-1 cursor-pointer"
                       >
-                        Booking #{chg.booking_number}
+                        <Ticket className="h-3.5 w-3.5" />
+                        <span>Pass #{chg.booking_number}</span>
                       </button>
                       {chg.booking && (
                         <span className="ui-badge ui-badge-teal font-mono">
-                          Car {chg.booking.vehicle_id}
+                          Vehicle {chg.booking.vehicle_id}
                         </span>
                       )}
                     </div>
                     {chg.hotel && (
-                      <span className="text-sm text-[#64748B]">
+                      <span className="text-xs sm:text-sm text-[#475569] font-medium">
                         {chg.hotel.name} · {chg.hotel.city} ({chg.hotel.area})
                       </span>
                     )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="bg-white border border-[#E2E8F0] rounded-[6px] p-3.5">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B] block mb-1">
-                        Current Confirmed Slot
+                    <div className="bg-white border border-[#E5E9F2] rounded-[10px] p-3.5">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block mb-1">
+                        Current Confirmed Schedule
                       </span>
-                      <p className="font-medium text-[#0F172A]">
+                      <p className="font-semibold text-[#0F172A]">
                         Flight {chg.prev_flight_id}
                         {chg.prev_flight ? ` (${chg.prev_flight.from} → ${chg.prev_flight.to})` : ""}
                       </p>
@@ -422,51 +497,58 @@ export function SupplierWorkspace({
                       </p>
                     </div>
 
-                    <div className="bg-white border border-[#FCD34D] rounded-[6px] p-3.5">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-[#B45309] block mb-1">
-                        Requested New Slot
+                    <div className="bg-white border border-[#FCD34D] rounded-[10px] p-3.5">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#B45309] block mb-1">
+                        Requested Updated Schedule
                       </span>
-                      <p className="font-medium text-[#0F172A]">
+                      <p className="font-semibold text-[#0F172A]">
                         Flight {chg.new_flight_id}
                         {chg.new_flight ? ` (${chg.new_flight.from} → ${chg.new_flight.to})` : ""}
                       </p>
                       <p className="font-mono text-xs text-[#0F172A] mt-1">
                         New Pickup: {formatDateTimeLabel(chg.new_pickup)}
                       </p>
-                      <p className="font-mono text-xs text-[#64748B] mt-0.5">
-                        Car Busy Window: {chg.new_busy_start.slice(11, 16)}–{chg.new_busy_end.slice(11, 16)}
+                      <p className="font-mono text-[11px] text-[#64748B] mt-0.5">
+                        Reserved Window: {chg.new_busy_start.slice(11, 16)}–{chg.new_busy_end.slice(11, 16)}
                       </p>
                     </div>
                   </div>
 
-                  {chgErr && (
-                    <div className="ui-alert-error p-3.5 space-y-1">
-                      <span className="text-xs font-semibold text-[#DC2626] block">
-                        {chgErr.rule ? `Rule ${chgErr.rule} Refused` : "Cannot Accept Change"}
-                      </span>
-                      <p className="text-sm text-[#991B1B]">{chgErr.message}</p>
-                    </div>
-                  )}
+                  <AnimatePresence mode="wait">
+                    {chgErr && (
+                      <NudgeAlert
+                        triggerKey={`chg-err-${chg.change_id}-${changeErrorSeq[chg.change_id] ?? 0}`}
+                        className="ui-alert-error p-3.5 space-y-1"
+                      >
+                        <span className="text-xs font-semibold text-[#BE123C] block">
+                          {chgErr.rule
+                            ? `Schedule Conflict (${chgErr.rule})`
+                            : "Unable to Approve Update"}
+                        </span>
+                        <p className="text-sm text-[#9F1239]">{chgErr.message}</p>
+                      </NudgeAlert>
+                    )}
+                  </AnimatePresence>
 
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     <button
                       type="button"
                       disabled={isBusyDeciding}
                       onClick={() => void handleChangeDecision(chg.change_id, "ACCEPT")}
-                      className="ui-btn-teal ui-focus-teal px-5 text-sm inline-flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                      className="ui-btn-teal ui-focus-teal px-5 text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer disabled:opacity-60"
                     >
                       <CheckCircle2 className="h-4 w-4" />
-                      <span>Accept Change</span>
+                      <span>Approve Update</span>
                     </button>
 
                     <button
                       type="button"
                       disabled={isBusyDeciding}
                       onClick={() => void handleChangeDecision(chg.change_id, "REJECT")}
-                      className="ui-btn-secondary ui-focus px-5 text-sm inline-flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                      className="ui-btn-ghost ui-focus px-4 text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer disabled:opacity-60"
                     >
-                      <XCircle className="h-4 w-4 text-[#DC2626]" />
-                      <span>Reject &amp; Keep Original</span>
+                      <XCircle className="h-4 w-4 text-[#E11D48]" />
+                      <span>Decline &amp; Keep Original</span>
                     </button>
                   </div>
                 </div>
@@ -476,18 +558,21 @@ export function SupplierWorkspace({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
         <div className="lg:col-span-7 space-y-5">
           <div className="ui-card flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-[#0F172A]">
-                Open Requests You Can Serve ({servableRequests.length})
+                Matching Passenger Requests ({servableRequests.length})
               </h2>
-              <p className="text-sm text-[#64748B] mt-0.5">
-                Filtered by Rule R4: matching arrival airport, hotel zone, operating hours, and fitting free car.
+              <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
+                Pre-qualified trips matching your airports, drop-off zones, hours, and fleet capacity.
               </p>
             </div>
-            <span className="ui-badge ui-badge-teal font-mono">M2 · M3 · R7</span>
+            <span className="ui-badge ui-badge-teal">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>Qualified Feed</span>
+            </span>
           </div>
 
           {isLoading && !dashboard && (
@@ -496,25 +581,37 @@ export function SupplierWorkspace({
                 <div key={idx} className="ui-card space-y-3">
                   <div className="h-5 w-48 skeleton-bar" />
                   <div className="h-4 w-72 skeleton-bar" />
-                  <div className="h-11 w-full skeleton-bar" />
+                  <div className="h-12 w-full skeleton-bar" />
                 </div>
               ))}
             </div>
           )}
 
           {dashboard && servableRequests.length === 0 && (
-            <div className="ui-card text-center py-10">
-              <p className="text-base font-semibold text-[#0F172A]">
-                No open ride requests match your company right now
+            <div className="ui-card text-center py-10 space-y-2">
+              <p className="text-base font-bold text-[#0F172A]">
+                No open passenger requests match {company?.name} right now
               </p>
-              <p className="text-sm text-[#64748B] mt-1.5 max-w-md mx-auto">
-                Only open requests matching {company?.name}&apos;s airports ({company?.airports.join(", ")}), hotel areas, operating hours, and available fleet appear here (R4).
+              <p className="text-sm text-[#64748B] max-w-md mx-auto leading-relaxed">
+                Requests automatically appear here when they land at {company?.airports.join(", ")}, travel to your covered hotel districts, and fit an available vehicle in your fleet.
               </p>
+              {onSwitchToTraveler && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={onSwitchToTraveler}
+                    className="ui-btn-secondary ui-focus px-4 text-xs inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Post a passenger request in Traveler View</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           <div className="space-y-5">
-            {servableRequests.map((item) => {
+            {servableRequests.map((item, idx) => {
               const reqId = item.request.request_id;
               const draft = drafts[reqId] ?? buildInitialDraft(item);
               const selectedEval = item.vehicle_evaluations.find(
@@ -525,276 +622,313 @@ export function SupplierWorkspace({
               const isSubmitting = submittingReqId === reqId;
 
               return (
-                <div key={reqId} className="ui-card ui-card-hover ui-top-teal space-y-5">
-                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#E2E8F0] pb-4">
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-[6px] bg-[#CCFBF1] border border-[#99F6E4] text-[#0F766E]">
-                          {reqId}
-                        </span>
-                        <span className="text-lg font-bold text-[#0F172A]">
-                          {item.request.traveler_name}
-                        </span>
-                        <span className="ui-badge ui-badge-open">OPEN</span>
-                        {item.request.car_type && (
-                          <span className="ui-badge ui-badge-accent font-mono">
-                            Requires {item.request.car_type}
+                <motion.div
+                  key={reqId}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.22,
+                    delay: Math.min(idx * 0.035, 0.18),
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
+                >
+                  <SpotlightCard
+                    spotlightColor="rgba(13, 148, 136, 0.055)"
+                    className="ui-card ui-top-teal space-y-5"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#E5E9F2] pb-4">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-[7px] bg-[#F0FDFA] border border-[#99F6E4] text-[#0F766E]">
+                            {reqId}
                           </span>
-                        )}
+                          <span className="text-lg font-bold text-[#0F172A]">
+                            {item.request.traveler_name}
+                          </span>
+                          <span className="ui-badge ui-badge-open">Open</span>
+                          {item.request.car_type && (
+                            <span className="ui-badge ui-badge-accent font-mono">
+                              {item.request.car_type} Only
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="text-right">
-                      <span className="text-xs text-[#64748B] block">Traveler&apos;s Price</span>
-                      <span className="font-mono text-xl font-bold text-[#0F172A] block">
-                        {formatInr(item.request.price_inr)}
-                      </span>
-                      <span className="font-mono text-xs text-[#B45309] bg-[#FFFBEB] border border-[#FDE68A] px-2.5 py-0.5 rounded-full font-semibold inline-block mt-1">
-                        Allowed: {formatInr(item.route.price_min_inr)}–{formatInr(item.route.price_max_inr)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-sm">
-                    <div className="flex items-start gap-2.5">
-                      <span className="h-7 w-7 ui-icon-circle ui-icon-indigo mt-0.5">
-                        <PlaneLanding className="h-3.5 w-3.5" />
-                      </span>
-                      <div>
-                        <span className="font-medium text-[#0F172A] block">
-                          {item.flight.flight_id} ({item.flight.from} → {item.flight.to})
+                      <div className="text-right">
+                        <span className="text-[11px] uppercase tracking-wider font-semibold text-[#64748B] block">
+                          Passenger Target
                         </span>
-                        <span className="font-mono text-xs text-[#64748B]">
-                          Lands {formatDateTimeLabel(item.flight.arrival_local)}
+                        <span className="font-mono text-xl font-bold text-[#0F172A] block">
+                          {formatInr(item.request.price_inr)}
+                        </span>
+                        <span className="font-mono text-[11px] text-[#B45309] bg-[#FFFBEB] border border-[#FDE68A] px-2.5 py-0.5 rounded-full font-semibold inline-block mt-0.5">
+                          Allowed {formatInr(item.route.price_min_inr)}–{formatInr(item.route.price_max_inr)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-2.5">
-                      <span className="h-7 w-7 ui-icon-circle ui-icon-teal mt-0.5">
-                        <MapPin className="h-3.5 w-3.5" />
-                      </span>
-                      <div>
-                        <span className="font-medium text-[#0F172A] block">
-                          {item.hotel.name}
+                    <div className="bg-[#F8FAFC] border border-[#E5E9F2] rounded-[11px] p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-start gap-2.5">
+                        <span className="h-8 w-8 ui-icon-circle ui-icon-indigo shrink-0">
+                          <PlaneLanding className="h-4 w-4" />
                         </span>
-                        <span className="text-xs text-[#64748B]">
-                          {item.hotel.city} · {item.hotel.area} ({item.route.drive_minutes}m drive)
+                        <div>
+                          <span className="font-semibold text-[#0F172A] block">
+                            {item.flight.flight_id} · {item.flight.from} → {item.flight.to}
+                          </span>
+                          <span className="font-mono text-xs text-[#64748B]">
+                            Lands {formatDateTimeLabel(item.flight.arrival_local)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2.5">
+                        <span className="h-8 w-8 ui-icon-circle ui-icon-teal shrink-0">
+                          <Building2 className="h-4 w-4" />
                         </span>
+                        <div>
+                          <span className="font-semibold text-[#0F172A] block">
+                            {item.hotel.name}
+                          </span>
+                          <span className="text-xs text-[#64748B]">
+                            {item.hotel.city} · {item.hotel.area} ({item.route.drive_minutes} min drive)
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-2.5">
-                      <span className="h-7 w-7 ui-icon-circle ui-icon-amber mt-0.5">
-                        <Clock className="h-3.5 w-3.5" />
-                      </span>
-                      <div>
-                        <span className="font-mono text-xs sm:text-sm font-medium text-[#0F172A] block">
-                          Pickup {formatDateTimeLabel(item.request.pickup)}
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm text-[#475569]">
+                      <span className="inline-flex items-center gap-1.5 font-mono text-[#0F172A]">
+                        <Clock className="h-4 w-4 text-[#D97706]" />
+                        <span>
+                          Pickup {formatDateTimeLabel(item.request.pickup)} (Busy{" "}
+                          {item.busy_window.start.slice(11, 16)}–{item.busy_window.end.slice(11, 16)})
                         </span>
-                        <span className="font-mono text-xs text-[#64748B]">
-                          Busy {item.busy_window.start.slice(11, 16)}–{item.busy_window.end.slice(11, 16)} (round-trip R6)
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2.5">
-                      <span className="h-7 w-7 ui-icon-circle ui-icon-indigo mt-0.5">
-                        <Users className="h-3.5 w-3.5" />
                       </span>
-                      <div>
-                        <span className="text-[#0F172A] font-medium block">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Users className="h-4 w-4 text-[#4F46E5]" />
+                        <span>
                           {item.request.adults} adult{item.request.adults === 1 ? "" : "s"}
                           {item.request.child_ages.length > 0
                             ? ` + ${item.request.child_ages.length} child (${item.request.child_ages.join(", ")}y)`
                             : ""}
                         </span>
-                        <span className="inline-flex items-center gap-1 text-xs text-[#64748B]">
-                          <Luggage className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Luggage className="h-4 w-4 text-[#0D9488]" />
+                        <span>
                           {item.request.large_bags} large · {item.request.small_bags} small bags
                         </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {item.existing_offers.length > 0 && (
-                    <div className="bg-[#F0FDFA] border border-[#99F6E4] rounded-[8px] p-3.5 space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-[#0F766E] block">
-                        Your Assigned Cars on {reqId} ({item.existing_offers.length})
                       </span>
-                      <div className="flex flex-wrap gap-2">
-                        {item.existing_offers.map((ofr) => (
-                          <div
-                            key={ofr.offer_id}
-                            className="inline-flex items-center gap-2 bg-white border border-[#CBD5E1] rounded-[6px] px-3 py-1.5 text-xs"
-                          >
-                            <span className="font-mono font-semibold text-[#0F172A]">
-                              {ofr.vehicle_id}
-                            </span>
-                            <span className="font-mono text-[#0F766E] font-semibold">
-                              {formatInr(ofr.price_inr)}
-                            </span>
-                            <span className={getOfferBadgeClass(ofr.status)}>
-                              {ofr.status}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
                     </div>
-                  )}
 
-                  {errBanner && (
-                    <div className="ui-alert-error p-4 space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#DC2626]">
-                          <AlertTriangle className="h-4 w-4 shrink-0" />
-                          {errBanner.rule ? `Rule ${errBanner.rule} Refused` : "Assignment Refused"}
+                    {item.existing_offers.length > 0 && (
+                      <div className="bg-[#F0FDFA] border border-[#99F6E4] rounded-[10px] p-3.5 space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-[#0F766E] block">
+                          Your Sent Quotes for This Trip ({item.existing_offers.length})
                         </span>
-                        {errBanner.code && (
-                          <span className="font-mono text-xs text-[#991B1B]">
-                            {errBanner.code}
-                          </span>
-                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {item.existing_offers.map((ofr) => (
+                            <div
+                              key={ofr.offer_id}
+                              className="inline-flex items-center gap-2 bg-white border border-[#CBD5E1] rounded-[8px] px-3 py-1.5 text-xs"
+                            >
+                              <span className="font-mono font-semibold text-[#0F172A]">
+                                {ofr.vehicle_id}
+                              </span>
+                              <span className="font-mono text-[#0F766E] font-semibold">
+                                {formatInr(ofr.price_inr)}
+                              </span>
+                              <span className={getOfferBadgeClass(ofr.status)}>
+                                {formatOfferStatusText(ofr.status)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-sm text-[#991B1B] leading-relaxed">
-                        {errBanner.message}
-                      </p>
-                    </div>
-                  )}
+                    )}
 
-                  {okBanner && (
-                    <div className="ui-alert-success p-4 flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-[#16A34A] shrink-0 mt-0.5" />
-                      <p className="text-sm text-[#166534]">{okBanner}</p>
-                    </div>
-                  )}
-
-                  <form
-                    onSubmit={(e) => void handleAssignCar(e, item)}
-                    noValidate
-                    className="pt-4 border-t border-[#E2E8F0] space-y-4"
-                  >
-                    <div>
-                      <label
-                        htmlFor={`vehicle-select-${reqId}`}
-                        className="block text-sm font-medium text-[#0F172A] mb-1.5"
-                      >
-                        Select Vehicle to Assign (G1: multiple cars allowed)
-                      </label>
-                      <div className="relative ui-input-wrap">
-                        <select
-                          id={`vehicle-select-${reqId}`}
-                          value={draft.vehicleId}
-                          onChange={(e) => updateDraft(item, { vehicleId: e.target.value })}
-                          className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#0F172A] focus:outline-none cursor-pointer"
+                    <AnimatePresence mode="wait">
+                      {errBanner && (
+                        <NudgeAlert
+                          triggerKey={`sup-err-${reqId}-${offerErrorSeq[reqId] ?? 0}`}
+                          className="ui-alert-error p-4 space-y-1"
                         >
-                          {item.vehicle_evaluations.map((ev) => {
-                            const v = ev.vehicle;
-                            let statusSuffix = "Fits & Free";
-                            if (ev.already_offered_open) {
-                              statusSuffix = "Already offered (OPEN)";
-                            }
-                            else if (!ev.eligible) {
-                              statusSuffix = `Breaks ${ev.broken_rule ?? "Rule"}`;
-                            }
-
-                            return (
-                              <option
-                                key={v.vehicle_id}
-                                value={v.vehicle_id}
-                                className="bg-white text-[#0F172A]"
-                              >
-                                {v.vehicle_id} · {v.type} ({v.seats} seats, {v.large_bags}L/{v.small_bags}S bags) — {statusSuffix}
-                              </option>
-                            );
-                          })}
-                        </select>
-                        <ChevronDown className="h-4 w-4 text-[#0F766E] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-
-                      {selectedEval && !selectedEval.eligible && selectedEval.reason && (
-                        <p className="text-xs text-[#B45309] mt-1.5">
-                          Note: {selectedEval.reason} (Kept selectable so you can verify backend Rule {selectedEval.broken_rule} refusal).
-                        </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#BE123C]">
+                              <AlertTriangle className="h-4 w-4 shrink-0" />
+                              <span>
+                                {errBanner.rule
+                                  ? `Dispatch Refused (${errBanner.rule})`
+                                  : "Dispatch Refused"}
+                              </span>
+                            </span>
+                            {errBanner.code && (
+                              <span className="font-mono text-xs text-[#9F1239]">
+                                {errBanner.code}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-[#9F1239] leading-relaxed">
+                            {errBanner.message}
+                          </p>
+                        </NudgeAlert>
                       )}
-                    </div>
+                    </AnimatePresence>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label
-                            htmlFor={`offer-price-${reqId}`}
-                            className="text-sm font-medium text-[#0F172A]"
-                          >
-                            Your Offer Price (INR · R3)
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateDraft(item, { priceInr: String(item.request.price_inr) })
-                            }
-                            className="text-xs font-semibold text-[#0F766E] hover:text-[#115E59] hover:underline cursor-pointer"
-                          >
-                            Match {formatInr(item.request.price_inr)}
-                          </button>
-                        </div>
-                        <div className="relative">
-                          <IndianRupee className="h-4 w-4 text-[#D97706] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                          <input
-                            id={`offer-price-${reqId}`}
-                            type="number"
-                            value={draft.priceInr}
-                            onChange={(e) => updateDraft(item, { priceInr: e.target.value })}
-                            placeholder="Enter INR price"
-                            className="ui-input w-full pl-9 pr-3.5 font-mono text-base"
-                          />
-                        </div>
-                      </div>
+                    <AnimatePresence>
+                      {okBanner && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          className="ui-alert-success p-4 space-y-2"
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <CheckCircle2 className="h-5 w-5 text-[#059669] shrink-0 mt-0.5" />
+                            <p className="text-sm text-[#065F46]">{okBanner}</p>
+                          </div>
+                          {onSwitchToTraveler && (
+                            <button
+                              type="button"
+                              onClick={onSwitchToTraveler}
+                              className="text-xs font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline inline-flex items-center gap-1 cursor-pointer pl-7"
+                            >
+                              <span>Switch to Traveler View to review &amp; book →</span>
+                            </button>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
+                    <form
+                      onSubmit={(e) => void handleAssignCar(e, item)}
+                      noValidate
+                      className="pt-4 border-t border-[#E5E9F2] space-y-4"
+                    >
                       <div>
                         <label
-                          htmlFor={`offer-expiry-${reqId}`}
-                          className="block text-sm font-medium text-[#0F172A] mb-1.5"
+                          htmlFor={`vehicle-select-${reqId}`}
+                          className="block text-xs font-semibold uppercase tracking-wider text-[#475569] mb-1.5"
                         >
-                          Offer Expiry (Optional · G4)
+                          Select Fleet Vehicle (Multiple vehicles permitted per trip)
                         </label>
-                        <div className="relative ui-input-wrap">
+                        <div className="relative ui-input-wrap-teal">
                           <select
-                            id={`offer-expiry-${reqId}`}
-                            value={draft.expirySeconds}
-                            onChange={(e) =>
-                              updateDraft(item, { expirySeconds: e.target.value })
-                            }
+                            id={`vehicle-select-${reqId}`}
+                            value={draft.vehicleId}
+                            onChange={(e) => updateDraft(item, { vehicleId: e.target.value })}
                             className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#0F172A] focus:outline-none cursor-pointer"
                           >
-                            <option value="" className="bg-white text-[#0F172A]">
-                              No expiry
-                            </option>
-                            <option value="30" className="bg-white text-[#0F172A]">
-                              Expire in 30 seconds (Demo)
-                            </option>
-                            <option value="120" className="bg-white text-[#0F172A]">
-                              Expire in 2 minutes
-                            </option>
-                            <option value="900" className="bg-white text-[#0F172A]">
-                              Expire in 15 minutes
-                            </option>
+                            {item.vehicle_evaluations.map((ev) => {
+                              const v = ev.vehicle;
+                              let statusSuffix = "Available · Fits party";
+                              if (ev.already_offered_open) {
+                                statusSuffix = "Quote already active";
+                              }
+                              else if (!ev.eligible) {
+                                statusSuffix = `Ineligible (${ev.broken_rule ?? "Check"})`;
+                              }
+
+                              return (
+                                <option
+                                  key={v.vehicle_id}
+                                  value={v.vehicle_id}
+                                  className="bg-white text-[#0F172A]"
+                                >
+                                  {v.vehicle_id} · {v.type} ({v.seats} seats, {v.large_bags}L/{v.small_bags}S bags) — {statusSuffix}
+                                </option>
+                              );
+                            })}
                           </select>
-                          <ChevronDown className="h-4 w-4 text-[#0F766E] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <ChevronDown className="h-4 w-4 text-[#0D9488] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+
+                        {selectedEval && !selectedEval.eligible && selectedEval.reason && (
+                          <p className="text-xs text-[#B45309] mt-1.5">
+                            Heads up: {selectedEval.reason}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label
+                              htmlFor={`offer-price-${reqId}`}
+                              className="text-xs font-semibold uppercase tracking-wider text-[#475569]"
+                            >
+                              Your Quote Fare (INR)
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateDraft(item, { priceInr: String(item.request.price_inr) })
+                              }
+                              className="text-xs font-semibold text-[#0D9488] hover:text-[#0F766E] hover:underline cursor-pointer"
+                            >
+                              Match {formatInr(item.request.price_inr)}
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <IndianRupee className="h-4 w-4 text-[#D97706] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <input
+                              id={`offer-price-${reqId}`}
+                              type="number"
+                              value={draft.priceInr}
+                              onChange={(e) => updateDraft(item, { priceInr: e.target.value })}
+                              placeholder="Enter INR quote"
+                              className="ui-input ui-input-teal w-full pl-9 pr-3.5 font-mono text-base"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor={`offer-expiry-${reqId}`}
+                            className="block text-xs font-semibold uppercase tracking-wider text-[#475569] mb-1.5"
+                          >
+                            Quote Validity Window
+                          </label>
+                          <div className="relative ui-input-wrap-teal">
+                            <select
+                              id={`offer-expiry-${reqId}`}
+                              value={draft.expirySeconds}
+                              onChange={(e) =>
+                                updateDraft(item, { expirySeconds: e.target.value })
+                              }
+                              className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#0F172A] focus:outline-none cursor-pointer"
+                            >
+                              <option value="" className="bg-white text-[#0F172A]">
+                                Open until booked
+                              </option>
+                              <option value="30" className="bg-white text-[#0F172A]">
+                                Valid for 30 seconds
+                              </option>
+                              <option value="120" className="bg-white text-[#0F172A]">
+                                Valid for 2 minutes
+                              </option>
+                              <option value="900" className="bg-white text-[#0F172A]">
+                                Valid for 15 minutes
+                              </option>
+                            </select>
+                            <ChevronDown className="h-4 w-4 text-[#0D9488] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="ui-btn-teal ui-focus-teal w-full px-5 text-base flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                    >
-                      <span>{isSubmitting ? "Assigning Car..." : "Assign Car & Send Offer"}</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </form>
-                </div>
+                      <ClickSparkButton
+                        type="submit"
+                        sparkColor="#99F6E4"
+                        disabled={isSubmitting}
+                        className="ui-btn-teal ui-focus-teal w-full px-5 text-base flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                      >
+                        <span>{isSubmitting ? "Sending Quote..." : "Assign Vehicle & Send Quote"}</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </ClickSparkButton>
+                    </form>
+                  </SpotlightCard>
+                </motion.div>
               );
             })}
           </div>
@@ -802,22 +936,22 @@ export function SupplierWorkspace({
 
         <div className="lg:col-span-5 space-y-6">
           <div className="ui-card ui-top-teal space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+            <div className="flex items-center justify-between border-b border-[#E5E9F2] pb-4">
               <div className="flex items-center gap-2.5">
                 <span className="h-8 w-8 ui-icon-circle ui-icon-teal">
                   <Clock className="h-4 w-4" />
                 </span>
                 <div>
                   <h2 className="text-lg font-bold text-[#0F172A]">
-                    Fleet Schedule &amp; Busy Windows
+                    Fleet Availability Schedule
                   </h2>
                   <p className="text-xs text-[#64748B]">
-                    Combined pre-booked rides and confirmed bookings (R6 · S2).
+                    Live round-trip reservations across your vehicles
                   </p>
                 </div>
               </div>
               <span className="ui-badge ui-badge-teal font-mono">
-                {fleetTimeline.length} cars
+                {fleetTimeline.length} vehicles
               </span>
             </div>
 
@@ -829,7 +963,7 @@ export function SupplierWorkspace({
                 return (
                   <div
                     key={v.vehicle_id}
-                    className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-[8px] p-4 space-y-2.5"
+                    className="bg-[#F8FAFC] border border-[#E5E9F2] rounded-[11px] p-4 space-y-2.5"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
@@ -848,7 +982,9 @@ export function SupplierWorkspace({
                         }
                       >
                         {hasBlocks
-                          ? `${entry.busy_slots.length} busy window${entry.busy_slots.length === 1 ? "" : "s"}`
+                          ? `${entry.busy_slots.length} reserved slot${
+                              entry.busy_slots.length === 1 ? "" : "s"
+                            }`
                           : "Available"}
                       </span>
                     </div>
@@ -858,11 +994,11 @@ export function SupplierWorkspace({
                     </p>
 
                     {hasBlocks && (
-                      <div className="space-y-1.5 pt-2 border-t border-[#E2E8F0]">
+                      <div className="space-y-1.5 pt-2 border-t border-[#E5E9F2]">
                         {entry.busy_slots.map((slot, idx) => (
                           <div
                             key={`${slot.reference_id}-${idx}`}
-                            className="bg-white border border-[#E2E8F0] rounded-[6px] px-3 py-2 flex items-center justify-between gap-2 text-xs"
+                            className="bg-white border border-[#E5E9F2] rounded-[8px] px-3 py-2 flex items-center justify-between gap-2 text-xs"
                           >
                             <span className="font-mono text-[#0F172A]">
                               {formatDateTimeLabel(slot.start)} → {slot.end.slice(11, 16)}
@@ -873,7 +1009,7 @@ export function SupplierWorkspace({
                                 onClick={() => onOpenBooking(slot.reference_id)}
                                 className="font-mono font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline cursor-pointer"
                               >
-                                #{slot.reference_id}
+                                Pass #{slot.reference_id}
                               </button>
                             ) : (
                               <span className="font-mono text-[#64748B]">
@@ -892,29 +1028,30 @@ export function SupplierWorkspace({
 
           {myBookings.length > 0 && (
             <div className="ui-card ui-top-green space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+              <div className="flex items-center justify-between border-b border-[#E5E9F2] pb-3">
                 <h2 className="text-lg font-bold text-[#0F172A]">
-                  Confirmed Bookings ({myBookings.length})
+                  Confirmed Transfers ({myBookings.length})
                 </h2>
-                <span className="ui-badge ui-badge-booked">Active</span>
+                <span className="ui-badge ui-badge-booked">Confirmed</span>
               </div>
 
               <div className="space-y-3">
                 {myBookings.map((bk) => (
                   <div
                     key={bk.booking_number}
-                    className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-[8px] p-4 flex items-center justify-between gap-3"
+                    className="bg-[#F8FAFC] border border-[#E5E9F2] rounded-[10px] p-4 flex items-center justify-between gap-3"
                   >
                     <div className="space-y-1">
                       <button
                         type="button"
                         onClick={() => onOpenBooking(bk.booking_number)}
-                        className="font-mono text-sm font-bold text-[#4F46E5] hover:text-[#4338CA] hover:underline cursor-pointer block"
+                        className="font-mono text-sm font-bold text-[#4F46E5] hover:text-[#4338CA] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
                       >
-                        Booking #{bk.booking_number}
+                        <Ticket className="h-3.5 w-3.5" />
+                        <span>Pass #{bk.booking_number}</span>
                       </button>
                       <p className="text-xs text-[#64748B]">
-                        Car {bk.vehicle_id} · {bk.flight_id} · Pickup {formatDateTimeLabel(bk.pickup)}
+                        Vehicle {bk.vehicle_id} · {bk.flight_id} · {formatDateTimeLabel(bk.pickup)}
                       </p>
                     </div>
                     <span className="font-mono text-base font-bold text-[#0F172A]">
@@ -928,23 +1065,23 @@ export function SupplierWorkspace({
 
           {myOffers.length > 0 && (
             <div className="ui-card space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+              <div className="flex items-center justify-between border-b border-[#E5E9F2] pb-3">
                 <h2 className="text-lg font-bold text-[#0F172A]">
-                  Submitted Offers ({myOffers.length})
+                  Recent Sent Quotes ({myOffers.length})
                 </h2>
               </div>
 
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 {myOffers.map((ofr) => (
                   <div
                     key={ofr.offer_id}
-                    className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-[6px] px-3.5 py-2.5 flex items-center justify-between gap-2 text-sm"
+                    className="bg-[#F8FAFC] border border-[#E5E9F2] rounded-[8px] px-3.5 py-2.5 flex items-center justify-between gap-2 text-sm"
                   >
                     <div>
                       <span className="font-mono font-semibold text-[#0F172A]">
                         {ofr.vehicle_id}
                       </span>
-                      <span className="text-[#64748B] mx-1.5">→</span>
+                      <span className="text-[#94A3B8] mx-1.5">→</span>
                       <span className="font-mono text-xs text-[#64748B]">
                         {ofr.request_id}
                       </span>
@@ -954,7 +1091,7 @@ export function SupplierWorkspace({
                         {formatInr(ofr.price_inr)}
                       </span>
                       <span className={getOfferBadgeClass(ofr.status)}>
-                        {ofr.status}
+                        {formatOfferStatusText(ofr.status)}
                       </span>
                     </div>
                   </div>
@@ -969,11 +1106,11 @@ export function SupplierWorkspace({
                 <span className="h-8 w-8 ui-icon-circle ui-icon-teal">
                   <MapPin className="h-4 w-4" />
                 </span>
-                <span>Service Coverage</span>
+                <span>Operating Coverage</span>
               </h2>
               <div>
-                <span className="text-sm font-medium text-[#64748B] block mb-2">
-                  Pickup Airports
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B] block mb-2">
+                  Served Airports
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {company.airports.map((code) => (
@@ -984,10 +1121,10 @@ export function SupplierWorkspace({
                 </div>
               </div>
               <div>
-                <span className="text-sm font-medium text-[#64748B] block mb-2">
-                  Hotel Drop-off Areas ({company.areas.length})
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B] block mb-2">
+                  Drop-off Districts ({company.areas.length})
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {company.areas.map((zone) => (
                     <span
                       key={`${zone.city}-${zone.area}`}
