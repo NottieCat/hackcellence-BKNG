@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { ApiRuleError, fetchBootstrap } from "./api/client";
 import type { BootstrapData, SupplierCompany } from "./api/client";
+import { BookingSummaryPage } from "./pages/BookingSummaryPage";
 import { SupplierWorkspace } from "./pages/SupplierWorkspace";
 import { TravelerWorkspace } from "./pages/TravelerWorkspace";
 
@@ -354,23 +355,12 @@ function App() {
           )}
 
           {screen === "booking" && (
-            <section key="booking-screen" className="panel-enter space-y-6">
-              <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#E5E7EB] pb-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB] mb-1.5">
-                    Booking Summary
-                  </p>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827] font-mono">
-                    Booking #{activeBookingNumber}
-                  </h1>
-                </div>
-              </div>
-              <div className="ui-card">
-                <p className="text-base text-[#6B7280]">
-                  10-digit booking details and flight/pickup change requests will mount here in Step 9.
-                </p>
-              </div>
-            </section>
+            <BookingSummaryPage
+              bookingNumber={activeBookingNumber}
+              bootstrap={bootstrap}
+              onBackToTraveler={handleOpenTraveler}
+              onOpenSupplier={handleChooseSupplier}
+            />
           )}
         </div>
       </main>

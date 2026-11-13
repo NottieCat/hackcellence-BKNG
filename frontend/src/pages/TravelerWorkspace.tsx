@@ -20,14 +20,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import {
   ApiRuleError,
+  bookTaxiOffer,
   createRideRequest,
   fetchRequestDetail,
   fetchRideRequests,
-  fetchRouteQuote
+  fetchRouteQuote,
+  rejectTaxiOffer
 } from "../api/client";
 import type {
   BootstrapData,
   EnrichedRideRequest,
+  OfferStatus,
   RequestDetailData,
   RouteQuoteData
 } from "../api/client";
@@ -53,6 +56,45 @@ function formatDateTimeLabel(isoHM: string): string {
 
 function formatInr(amount: number): string {
   return `₹${amount.toLocaleString("en-IN")}`;
+}
+
+function getOfferStatusBadge(status: OfferStatus): { label: string; className: string } {
+  if (status === "BOOKED") {
+    return { label: "Booked", className: "ui-badge ui-badge-booked" };
+  }
+  if (status === "OPEN") {
+    return { label: "Pending", className: "ui-badge ui-badge-pending" };
+  }
+  if (status === "REJECTED") {
+    return { label: "Rejected", className: "ui-badge ui-badge-rejected" };
+  }
+  if (status === "NOT_CHOSEN") {
+    return { label: "Not chosen", className: "ui-badge ui-badge-neutral" };
+  }
+  return { label: "Expired", className: "ui-badge ui-badge-neutral" };
+}
+
+function formatExpiryCountdown(
+  expiresAt: string | null,
+  nowMs: number
+): { text: string; expired: boolean } | null {
+  if (!expiresAt) {
+    return null;
+  }
+  const expiryMs = Date.parse(expiresAt);
+  if (Number.isNaN(expiryMs)) {
+    return null;
+  }
+  const remainingSec = Math.ceil((expiryMs - nowMs) / 1000);
+  if (remainingSec <= 0) {
+    return { text: "Offer expired", expired: true };
+  }
+  if (remainingSec < 60) {
+    return { text: `Expires in ${remainingSec}s`, expired: false };
+  }
+  const mins = Math.floor(remainingSec / 60);
+  const secs = remainingSec % 60;
+  return { text: `Expires in ${mins}m ${secs}s`, expired: false };
 }
 
 export function TravelerWorkspace({
@@ -87,6 +129,13 @@ export function TravelerWorkspace({
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
   const [expandedDetail, setExpandedDetail] = useState<RequestDetailData | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState<boolean>(false);
+
+  const [offerSort, setOfferSort] = useState<string>("");
+  const [offerCarTypeFilter, setOfferCarTypeFilter] = useState<string>("ALL");
+  const [actionOfferId, setActionOfferId] = useState<string | null>(null);
+  const [offerActionError, setOfferActionError] = useState<BannerError | null>(null);
+  const [offerActionSuccess, setOfferActionSuccess] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
   const airports = bootstrap?.airports ?? [];
   const allFlights = bootstrap?.flights ?? [];
@@ -210,26 +259,175 @@ export function TravelerWorkspace({
     setChildAges((prev) => prev.filter((_, i) => i !== index));
   }
 
+  const loadRequestDetail = useCallback(
+    async (
+      requestId: string,
+      sortValue: string,
+      carTypeValue: string,
+      silent = false
+    ) => {
+      if (!silent) {
+        setIsLoadingDetail(true);
+      }
+
+      try {
+        const detail = await fetchRequestDetail(requestId, {
+          sort: sortValue || undefined,
+          carType: carTypeValue === "ALL" ? undefined : carTypeValue
+        });
+        setExpandedDetail(detail);
+        setNowMs(Date.now());
+      }
+      catch {
+        if (!silent) {
+          setExpandedDetail(null);
+        }
+      }
+      finally {
+        if (!silent) {
+          setIsLoadingDetail(false);
+        }
+      }
+    },
+    []
+  );
+
+  const hasExpiringOpenOffer = Boolean(
+    expandedDetail?.offers.some(
+      (offer) => offer.status === "OPEN" && Boolean(offer.expires_at)
+    )
+  );
+
+  useEffect(() => {
+    if (!hasExpiringOpenOffer) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [hasExpiringOpenOffer]);
+
   async function handleToggleRequestDetail(requestId: string): Promise<void> {
     if (expandedRequestId === requestId) {
       setExpandedRequestId(null);
       setExpandedDetail(null);
+      setOfferActionError(null);
+      setOfferActionSuccess(null);
       return;
     }
 
     setExpandedRequestId(requestId);
     setExpandedDetail(null);
-    setIsLoadingDetail(true);
+    setOfferSort("");
+    setOfferCarTypeFilter("ALL");
+    setOfferActionError(null);
+    setOfferActionSuccess(null);
+    await loadRequestDetail(requestId, "", "ALL", false);
+  }
+
+  function handleOfferSortChange(nextSort: string): void {
+    setOfferSort(nextSort);
+    setOfferActionError(null);
+    if (expandedRequestId) {
+      void loadRequestDetail(expandedRequestId, nextSort, offerCarTypeFilter, false);
+    }
+  }
+
+  function handleOfferCarTypeChange(nextCarType: string): void {
+    setOfferCarTypeFilter(nextCarType);
+    setOfferActionError(null);
+    if (expandedRequestId) {
+      void loadRequestDetail(expandedRequestId, offerSort, nextCarType, false);
+    }
+  }
+
+  async function handleRejectOffer(offerId: string): Promise<void> {
+    if (!expandedRequestId) {
+      return;
+    }
+
+    setActionOfferId(offerId);
+    setOfferActionError(null);
+    setOfferActionSuccess(null);
 
     try {
-      const detail = await fetchRequestDetail(requestId);
-      setExpandedDetail(detail);
+      await rejectTaxiOffer(offerId);
+      setOfferActionSuccess(`Taxi offer ${offerId} marked as Rejected.`);
+      await Promise.all([
+        loadRequests(),
+        loadRequestDetail(expandedRequestId, offerSort, offerCarTypeFilter, true)
+      ]);
+      if (onCatalogRefresh) {
+        onCatalogRefresh();
+      }
     }
-    catch {
-      setExpandedDetail(null);
+    catch (err) {
+      if (err instanceof ApiRuleError) {
+        setOfferActionError({
+          rule: err.rule,
+          code: err.code,
+          message: err.message
+        });
+      }
+      else {
+        setOfferActionError({
+          code: "REJECT_FAILED",
+          message: "Failed to reject taxi offer."
+        });
+      }
+      await Promise.all([
+        loadRequests(),
+        loadRequestDetail(expandedRequestId, offerSort, offerCarTypeFilter, true)
+      ]);
     }
     finally {
-      setIsLoadingDetail(false);
+      setActionOfferId(null);
+    }
+  }
+
+  async function handleBookOffer(offerId: string): Promise<void> {
+    if (!expandedRequestId) {
+      return;
+    }
+
+    setActionOfferId(offerId);
+    setOfferActionError(null);
+    setOfferActionSuccess(null);
+
+    try {
+      const booked = await bookTaxiOffer(offerId);
+      await loadRequests();
+      if (onCatalogRefresh) {
+        onCatalogRefresh();
+      }
+      onOpenBooking(booked.booking.booking_number);
+    }
+    catch (err) {
+      if (err instanceof ApiRuleError) {
+        setOfferActionError({
+          rule: err.rule,
+          code: err.code,
+          message: err.message
+        });
+      }
+      else {
+        setOfferActionError({
+          code: "BOOK_FAILED",
+          message: "Failed to confirm taxi booking."
+        });
+      }
+      await Promise.all([
+        loadRequests(),
+        loadRequestDetail(expandedRequestId, offerSort, offerCarTypeFilter, true)
+      ]);
+    }
+    finally {
+      setActionOfferId(null);
     }
   }
 
@@ -267,6 +465,10 @@ export function TravelerWorkspace({
 
       await loadRequests();
       setExpandedRequestId(result.request.request_id);
+      setOfferSort("");
+      setOfferCarTypeFilter("ALL");
+      setOfferActionError(null);
+      setOfferActionSuccess(null);
       const detail = await fetchRequestDetail(result.request.request_id);
       setExpandedDetail(detail);
 
@@ -942,65 +1144,265 @@ export function TravelerWorkspace({
                   </div>
 
                   {isExpanded && (
-                    <div className="border-t border-[#E5E7EB] bg-[#F8F9FB] p-6">
+                    <div className="border-t border-[#E5E7EB] bg-[#F8F9FB] p-6 space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-sm font-bold text-[#111827]">
+                            Assigned Taxis ({expandedDetail ? expandedDetail.offers.length : item.total_offers_count})
+                          </h3>
+                          <p className="text-xs text-[#6B7280] mt-0.5">
+                            Compare supplier fares, sort or filter offers (G5), and book or reject each car (M4 · R8).
+                          </p>
+                        </div>
+
+                        {(item.total_offers_count > 0 ||
+                          offerCarTypeFilter !== "ALL" ||
+                          offerSort !== "") && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <div className="relative ui-input-wrap">
+                              <select
+                                aria-label="Sort offers by price"
+                                value={offerSort}
+                                onChange={(e) => handleOfferSortChange(e.target.value)}
+                                className="h-full appearance-none bg-transparent pl-3 pr-8 text-xs font-medium text-[#111827] focus:outline-none cursor-pointer"
+                              >
+                                <option value="" className="bg-white text-[#111827]">
+                                  Sort: Newest first
+                                </option>
+                                <option value="price_asc" className="bg-white text-[#111827]">
+                                  Price: Low to High (G5)
+                                </option>
+                                <option value="price_desc" className="bg-white text-[#111827]">
+                                  Price: High to Low (G5)
+                                </option>
+                              </select>
+                              <ChevronDown className="h-3.5 w-3.5 text-[#6B7280] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            </div>
+
+                            <div className="relative ui-input-wrap">
+                              <select
+                                aria-label="Filter offers by car type"
+                                value={offerCarTypeFilter}
+                                onChange={(e) => handleOfferCarTypeChange(e.target.value)}
+                                className="h-full appearance-none bg-transparent pl-3 pr-8 text-xs font-medium text-[#111827] focus:outline-none cursor-pointer"
+                              >
+                                <option value="ALL" className="bg-white text-[#111827]">
+                                  Car Type: All
+                                </option>
+                                <option value="HATCHBACK" className="bg-white text-[#111827]">
+                                  HATCHBACK
+                                </option>
+                                <option value="SEDAN" className="bg-white text-[#111827]">
+                                  SEDAN
+                                </option>
+                                <option value="SUV" className="bg-white text-[#111827]">
+                                  SUV
+                                </option>
+                                <option value="BUS" className="bg-white text-[#111827]">
+                                  BUS
+                                </option>
+                              </select>
+                              <ChevronDown className="h-3.5 w-3.5 text-[#6B7280] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void loadRequestDetail(
+                                  item.request_id,
+                                  offerSort,
+                                  offerCarTypeFilter,
+                                  false
+                                )
+                              }
+                              title="Refresh offers"
+                              aria-label="Refresh offers"
+                              className="ui-btn-secondary ui-focus w-11 inline-flex items-center justify-center cursor-pointer"
+                            >
+                              <RefreshCw
+                                className={`h-4 w-4 ${
+                                  isLoadingDetail ? "animate-spin text-[#2563EB]" : "text-[#6B7280]"
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {offerActionError && (
+                        <div className="ui-alert-error p-4 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#DC2626]">
+                              <AlertTriangle className="h-4 w-4 shrink-0" />
+                              {offerActionError.rule
+                                ? `Rule ${offerActionError.rule} Refused`
+                                : "Action Refused"}
+                            </span>
+                            <span className="font-mono text-xs text-[#991B1B]">
+                              {offerActionError.code}
+                            </span>
+                          </div>
+                          <p className="text-sm text-[#991B1B] leading-relaxed">
+                            {offerActionError.message}
+                          </p>
+                        </div>
+                      )}
+
+                      {offerActionSuccess && (
+                        <div className="ui-alert-success p-4 flex items-center gap-2.5 text-sm text-[#166534]">
+                          <CheckCircle2 className="h-4 w-4 text-[#16A34A] shrink-0" />
+                          <span>{offerActionSuccess}</span>
+                        </div>
+                      )}
+
                       {isLoadingDetail ? (
                         <p className="text-sm text-[#6B7280]">Loading assigned taxis...</p>
                       ) : !expandedDetail || expandedDetail.offers.length === 0 ? (
-                        <p className="text-sm text-[#6B7280]">
-                          No taxi offers assigned yet. Switch to a Taxi Supplier workspace to assign a car and price.
-                        </p>
+                        offerCarTypeFilter !== "ALL" ? (
+                          <div className="bg-white border border-[#E5E7EB] rounded-[8px] p-5 flex flex-wrap items-center justify-between gap-3">
+                            <p className="text-sm text-[#6B7280]">
+                              No assigned taxis match car type{" "}
+                              <span className="font-mono font-semibold text-[#111827]">
+                                {offerCarTypeFilter}
+                              </span>
+                              .
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => handleOfferCarTypeChange("ALL")}
+                              className="ui-btn-secondary ui-focus px-4 text-sm cursor-pointer"
+                            >
+                              Show All Car Types
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-[#6B7280]">
+                            No taxi offers assigned yet. Switch to a Taxi Supplier workspace to assign a car and price.
+                          </p>
+                        )
                       ) : (
                         <div className="space-y-3">
-                          <p className="text-sm font-medium text-[#6B7280] mb-2">
-                            Assigned Taxis ({expandedDetail.offers.length}) — Book &amp; Reject actions wire in Step 9:
-                          </p>
-                          {expandedDetail.offers.map((offer) => (
-                            <div
-                              key={offer.offer_id}
-                              className="bg-white border border-[#E5E7EB] rounded-[8px] p-4 flex flex-wrap items-center justify-between gap-3"
-                            >
-                              <div className="space-y-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="text-base font-bold text-[#111827]">
-                                    {offer.company_name}
-                                  </span>
-                                  {offer.company_rating !== null && (
-                                    <span className="inline-flex items-center gap-1 font-mono text-xs text-[#6B7280]">
-                                      <Star className="h-3.5 w-3.5 text-[#F59E0B] fill-[#F59E0B]" />
-                                      {offer.company_rating.toFixed(1)}
+                          {expandedDetail.offers.map((offer) => {
+                            const statusBadge = getOfferStatusBadge(offer.status);
+                            const countdown =
+                              offer.status === "OPEN"
+                                ? formatExpiryCountdown(offer.expires_at, nowMs)
+                                : null;
+                            const isOfferBusy = actionOfferId === offer.offer_id;
+                            const canActOnOffer =
+                              item.status === "OPEN" && offer.status === "OPEN";
+
+                            return (
+                              <div
+                                key={offer.offer_id}
+                                className="bg-white border border-[#E5E7EB] rounded-[8px] p-4 space-y-3"
+                              >
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                  <div className="space-y-1.5">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span className="text-base font-bold text-[#111827]">
+                                        {offer.company_name}
+                                      </span>
+                                      {offer.company_rating !== null && (
+                                        <span className="inline-flex items-center gap-1 font-mono text-xs text-[#6B7280]">
+                                          <Star className="h-3.5 w-3.5 text-[#F59E0B] fill-[#F59E0B]" />
+                                          {offer.company_rating.toFixed(1)}
+                                        </span>
+                                      )}
+                                      <span className="ui-badge ui-badge-accent font-mono">
+                                        {offer.vehicle?.type ?? offer.vehicle_id} · {offer.vehicle_id}
+                                      </span>
+                                      <span className={statusBadge.className}>
+                                        {statusBadge.label}
+                                      </span>
+                                      {countdown && (
+                                        <span
+                                          className={`ui-badge font-mono ${
+                                            countdown.expired
+                                              ? "ui-badge-neutral"
+                                              : "ui-badge-pending"
+                                          }`}
+                                        >
+                                          {countdown.text}
+                                        </span>
+                                      )}
+                                      {offer.status === "OPEN" && !offer.car_currently_free && (
+                                        <span className="ui-badge ui-badge-pending">
+                                          Car busy on another ride (R6)
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {offer.vehicle && (
+                                      <p className="font-mono text-xs text-[#6B7280]">
+                                        {offer.vehicle.seats} seats · {offer.vehicle.large_bags}L /{" "}
+                                        {offer.vehicle.small_bags}S bags · {offer.offer_id}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="text-right">
+                                    <span className="font-mono text-lg font-bold text-[#111827] block">
+                                      {formatInr(offer.price_inr)}
                                     </span>
-                                  )}
-                                  <span className="ui-badge ui-badge-accent font-mono">
-                                    {offer.vehicle?.type ?? offer.vehicle_id} · {offer.vehicle_id}
-                                  </span>
+                                    <span
+                                      className={`font-mono text-xs font-medium block ${
+                                        offer.price_delta_inr <= 0
+                                          ? "text-[#15803D]"
+                                          : "text-[#6B7280]"
+                                      }`}
+                                    >
+                                      {offer.price_delta_inr === 0
+                                        ? "Matches your ask"
+                                        : offer.price_delta_inr < 0
+                                          ? `${formatInr(Math.abs(offer.price_delta_inr))} below your ask`
+                                          : `+${formatInr(offer.price_delta_inr)} vs your ask`}
+                                    </span>
+                                  </div>
                                 </div>
-                                {offer.vehicle && (
-                                  <p className="font-mono text-xs text-[#6B7280]">
-                                    {offer.vehicle.seats} seats · {offer.vehicle.large_bags}L / {offer.vehicle.small_bags}S bags · Status: {offer.status}
-                                  </p>
+
+                                {canActOnOffer && (
+                                  <div className="pt-3 border-t border-[#E5E7EB] flex flex-wrap items-center justify-end gap-2.5">
+                                    <button
+                                      type="button"
+                                      disabled={actionOfferId !== null}
+                                      onClick={() => void handleRejectOffer(offer.offer_id)}
+                                      className="ui-btn-secondary ui-focus px-4 text-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                      {isOfferBusy ? "Working..." : "Reject"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={actionOfferId !== null}
+                                      onClick={() => void handleBookOffer(offer.offer_id)}
+                                      className="ui-btn-primary ui-focus px-5 text-sm inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                      <span>{isOfferBusy ? "Booking..." : "Book Taxi"}</span>
+                                      <ArrowRight className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                )}
+
+                                {offer.status === "BOOKED" && expandedDetail.booking && (
+                                  <div className="pt-3 border-t border-[#E5E7EB] flex items-center justify-between gap-2 text-xs">
+                                    <span className="text-[#15803D] font-medium">
+                                      Confirmed booking #{expandedDetail.booking.booking_number}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        onOpenBooking(expandedDetail.booking!.booking_number)
+                                      }
+                                      className="font-semibold text-[#2563EB] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <span>View Booking Summary</span>
+                                      <ArrowRight className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
                                 )}
                               </div>
-
-                              <div className="text-right">
-                                <span className="font-mono text-base font-bold text-[#111827] block">
-                                  {formatInr(offer.price_inr)}
-                                </span>
-                                <span
-                                  className={`font-mono text-xs font-medium block ${
-                                    offer.price_delta_inr <= 0
-                                      ? "text-[#15803D]"
-                                      : "text-[#6B7280]"
-                                  }`}
-                                >
-                                  {offer.price_delta_inr === 0
-                                    ? "Matches your ask"
-                                    : offer.price_delta_inr < 0
-                                      ? `${formatInr(Math.abs(offer.price_delta_inr))} below your ask`
-                                      : `+${formatInr(offer.price_delta_inr)} vs your ask`}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
