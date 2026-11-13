@@ -1,16 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg-page: #ffffff;
-  --bg-section: #f8f9fb;
+  --bg-page: #f4f6fb;
   --bg-card: #ffffff;
-  --border-light: #e5e7eb;
-  --border-input: #d1d5db;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-ring: rgba(37, 99, 235, 0.16);
+  --bg-input: #f8fafc;
+  --border-card: #e2e8f0;
+  --border-input: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --indigo: #4f46e5;
+  --indigo-hover: #4338ca;
+  --indigo-soft: #eef2ff;
+  --indigo-ring: rgba(79, 70, 229, 0.18);
+  --teal: #0f766e;
+  --teal-hover: #115e59;
+  --teal-soft: #ccfbf1;
+  --teal-ring: rgba(15, 118, 110, 0.18);
+  --amber: #f59e0b;
 }
 
 @layer base {
@@ -60,8 +66,8 @@
   }
 
   ::selection {
-    background-color: rgba(37, 99, 235, 0.16);
-    color: #111827;
+    background-color: rgba(79, 70, 229, 0.16);
+    color: #0f172a;
   }
 }
 
@@ -93,7 +99,7 @@
 }
 
 .skeleton-bar {
-  background-color: #eef0f4;
+  background-color: #e2e8f0;
   border-radius: 6px;
   animation: skeletonPulse 1.4s ease-in-out infinite;
 }
@@ -109,9 +115,22 @@
 
 .ui-card {
   background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   padding: 24px;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.06),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.ui-card-flush {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.06),
+    0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .ui-card-hover {
@@ -123,14 +142,62 @@
 
 .ui-card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.06);
-  border-color: #d1d5db;
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.07),
+    0 2px 6px rgba(15, 23, 42, 0.04);
+  border-color: #cbd5e1;
+}
+
+.ui-top-indigo {
+  border-top: 3px solid #4f46e5;
+}
+
+.ui-top-teal {
+  border-top: 3px solid #0f766e;
+}
+
+.ui-top-amber {
+  border-top: 3px solid #f59e0b;
+}
+
+.ui-top-green {
+  border-top: 3px solid #16a34a;
+}
+
+.ui-hero-backdrop {
+  background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.ui-icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.ui-icon-indigo {
+  background-color: #eef2ff;
+  color: #4f46e5;
+}
+
+.ui-icon-teal {
+  background-color: #ccfbf1;
+  color: #0f766e;
+}
+
+.ui-icon-amber {
+  background-color: #fef3c7;
+  color: #d97706;
 }
 
 .ui-btn-primary {
   height: 44px;
   border-radius: 6px;
-  background-color: #2563eb;
+  background-color: #4f46e5;
   color: #ffffff;
   font-weight: 600;
   transition:
@@ -139,16 +206,31 @@
 }
 
 .ui-btn-primary:hover:not(:disabled) {
-  background-color: #1d4ed8;
+  background-color: #4338ca;
+}
+
+.ui-btn-teal {
+  height: 44px;
+  border-radius: 6px;
+  background-color: #0f766e;
+  color: #ffffff;
+  font-weight: 600;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.ui-btn-teal:hover:not(:disabled) {
+  background-color: #115e59;
 }
 
 .ui-btn-secondary {
   height: 44px;
   border-radius: 6px;
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  color: #111827;
-  font-weight: 500;
+  background-color: #eef2ff;
+  border: 1px solid #c7d2fe;
+  color: #4338ca;
+  font-weight: 600;
   transition:
     background-color 150ms ease,
     border-color 150ms ease,
@@ -156,17 +238,19 @@
 }
 
 .ui-btn-secondary:hover:not(:disabled) {
-  background-color: #f8f9fb;
-  border-color: #9ca3af;
+  background-color: #e0e7ff;
+  border-color: #a5b4fc;
+  color: #3730a3;
 }
 
 .ui-input {
   height: 44px;
   border-radius: 6px;
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  color: #111827;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
   transition:
+    background-color 150ms ease,
     border-color 150ms ease,
     box-shadow 150ms ease;
 }
@@ -174,23 +258,30 @@
 .ui-input:focus,
 .ui-input-wrap:focus-within {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px var(--accent-ring);
+  background-color: #ffffff;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px var(--indigo-ring);
 }
 
 .ui-input-wrap {
   height: 44px;
   border-radius: 6px;
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
   transition:
+    background-color 150ms ease,
     border-color 150ms ease,
     box-shadow 150ms ease;
 }
 
 .ui-focus:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--accent-ring);
+  box-shadow: 0 0 0 3px var(--indigo-ring);
+}
+
+.ui-focus-teal:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--teal-ring);
 }
 
 .ui-badge {
@@ -199,33 +290,50 @@
   border-radius: 9999px;
   padding: 2px 10px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.4;
+}
+
+.ui-badge-open {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
 }
 
 .ui-badge-booked {
   background-color: #dcfce7;
   color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
 .ui-badge-pending {
   background-color: #fef3c7;
   color: #b45309;
+  border: 1px solid #fde68a;
 }
 
 .ui-badge-rejected {
   background-color: #fee2e2;
   color: #b91c1c;
+  border: 1px solid #fecaca;
 }
 
 .ui-badge-neutral {
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 .ui-badge-accent {
-  background-color: #eff6ff;
-  color: #2563eb;
+  background-color: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+}
+
+.ui-badge-teal {
+  background-color: #ccfbf1;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
 }
 
 .ui-alert-error {
@@ -245,15 +353,15 @@
 .ui-alert-warning {
   background-color: #fffbeb;
   border: 1px solid #fde68a;
-  border-left: 4px solid #d97706;
+  border-left: 4px solid #f59e0b;
   border-radius: 6px;
 }
 
 .ui-alert-info {
-  background-color: #f8f9fb;
-  border: 1px solid #e5e7eb;
-  border-left: 4px solid #2563eb;
-  border-radius: 6px;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -269,6 +377,7 @@
   .ui-interactive,
   .ui-card-hover,
   .ui-btn-primary,
+  .ui-btn-teal,
   .ui-btn-secondary,
   .ui-input,
   .ui-input-wrap {

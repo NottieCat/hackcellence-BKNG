@@ -5,11 +5,11 @@ import {
   Building2,
   CalendarClock,
   CarTaxiFront,
+  Check,
   CheckCircle2,
   ChevronDown,
   Clock,
   Copy,
-  Check,
   Luggage,
   MapPin,
   PlaneLanding,
@@ -268,17 +268,22 @@ export function BookingSummaryPage({
 
   return (
     <section className="panel-enter space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#E5E7EB] pb-6">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB] mb-1.5">
-            Ride Confirmation · M5 &amp; M7
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827]">
-            Booking <span className="font-mono">#{bookingNumber}</span>
-          </h1>
-          <p className="text-base text-[#6B7280] mt-1">
-            Persistent 10-digit booking summary and post-booking flight or pickup change requests.
-          </p>
+      <div className="ui-card ui-top-indigo flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 ui-icon-circle ui-icon-indigo border border-[#C7D2FE] mt-0.5">
+            <CarTaxiFront className="h-6 w-6 stroke-[1.8]" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#4F46E5] mb-1">
+              Ride Confirmation · M5 &amp; M7
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
+              Booking <span className="font-mono text-[#4F46E5]">#{bookingNumber}</span>
+            </h1>
+            <p className="text-base text-[#64748B] mt-1">
+              Persistent 10-digit booking summary and post-booking flight or pickup change requests.
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
@@ -287,7 +292,7 @@ export function BookingSummaryPage({
             onClick={onBackToTraveler}
             className="ui-btn-secondary ui-focus px-4 text-sm inline-flex items-center gap-2 cursor-pointer"
           >
-            <ArrowLeft className="h-4 w-4 text-[#6B7280]" />
+            <ArrowLeft className="h-4 w-4" />
             <span>Back to Traveler Portal</span>
           </button>
 
@@ -296,7 +301,7 @@ export function BookingSummaryPage({
             onClick={() => void loadSummary(false)}
             className="ui-btn-secondary ui-focus px-4 text-sm inline-flex items-center gap-2 cursor-pointer"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin text-[#2563EB]" : "text-[#6B7280]"}`} />
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin text-[#4F46E5]" : ""}`} />
             <span>Refresh</span>
           </button>
         </div>
@@ -311,17 +316,17 @@ export function BookingSummaryPage({
       )}
 
       {notFoundMessage && (
-        <div className="ui-card text-center py-12 max-w-xl mx-auto space-y-4">
-          <div className="h-12 w-12 rounded-[8px] bg-[#FEF2F2] border border-[#FECACA] flex items-center justify-center text-[#DC2626] mx-auto">
+        <div className="ui-card ui-top-indigo text-center py-12 max-w-xl mx-auto space-y-4">
+          <div className="h-12 w-12 rounded-full bg-[#FEF2F2] border border-[#FECACA] flex items-center justify-center text-[#DC2626] mx-auto">
             <SearchX className="h-6 w-6" />
           </div>
           <div className="space-y-1.5">
-            <h2 className="text-xl font-bold text-[#111827]">
+            <h2 className="text-xl font-bold text-[#0F172A]">
               Booking not found
             </h2>
-            <p className="text-base text-[#6B7280]">
+            <p className="text-base text-[#64748B]">
               No confirmed airport taxi booking exists for number{" "}
-              <span className="font-mono font-semibold text-[#111827]">
+              <span className="font-mono font-semibold text-[#0F172A]">
                 {bookingNumber}
               </span>
               .
@@ -349,28 +354,28 @@ export function BookingSummaryPage({
       {summary && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-7 space-y-6">
-            <div className="ui-card space-y-6">
-              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#E5E7EB] pb-5">
-                <div className="space-y-1.5">
+            <div className="ui-card-flush">
+              <div className="bg-[#4F46E5] text-white px-6 py-6 flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span className="ui-badge ui-badge-booked">CONFIRMED</span>
-                    <span className="font-mono text-xs text-[#6B7280]">
+                    <span className="font-mono text-xs text-[#E0E7FF]">
                       Request {summary.booking.request_id}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2.5 pt-1">
-                    <span className="font-mono text-2xl font-bold text-[#111827]">
+                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                    <span className="font-mono text-3xl sm:text-4xl font-bold tracking-tight text-white">
                       #{summary.booking.booking_number}
                     </span>
                     <button
                       type="button"
                       onClick={() => void handleCopyBookingNumber()}
-                      className="px-2.5 py-1 rounded-[6px] bg-[#F8F9FB] border border-[#E5E7EB] hover:border-[#D1D5DB] text-xs font-medium text-[#6B7280] hover:text-[#111827] inline-flex items-center gap-1.5 cursor-pointer ui-interactive"
+                      className="px-3 py-1.5 rounded-[6px] bg-white/15 hover:bg-white/25 border border-white/25 text-xs font-semibold text-white inline-flex items-center gap-1.5 cursor-pointer ui-interactive"
                     >
                       {copied ? (
                         <>
-                          <Check className="h-3.5 w-3.5 text-[#16A34A]" />
-                          <span className="text-[#15803D]">Copied</span>
+                          <Check className="h-3.5 w-3.5 text-[#86EFAC]" />
+                          <span>Copied</span>
                         </>
                       ) : (
                         <>
@@ -383,124 +388,140 @@ export function BookingSummaryPage({
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs font-medium uppercase tracking-wider text-[#6B7280] block">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#E0E7FF] block">
                     Confirmed Fare
                   </span>
-                  <span className="font-mono text-2xl font-bold text-[#2563EB] block">
+                  <span className="font-mono text-2xl sm:text-3xl font-bold text-white block mt-0.5">
                     {formatInr(summary.booking.price_inr)}
                   </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="bg-[#F8F9FB] border border-[#E5E7EB] rounded-[8px] p-4 space-y-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#6B7280] flex items-center gap-1.5">
-                    <PlaneLanding className="h-4 w-4 text-[#2563EB]" />
-                    Arrival Flight
-                  </span>
-                  <p className="text-base font-bold text-[#111827]">
-                    {summary.flight
-                      ? `${summary.flight.flight_id} · ${summary.flight.airline}`
-                      : summary.booking.flight_id}
-                  </p>
-                  {summary.flight && (
-                    <p className="font-mono text-xs text-[#6B7280]">
-                      {summary.flight.from} → {summary.flight.to} · Lands{" "}
-                      {formatDateTimeLabel(summary.flight.arrival_local)}
-                    </p>
-                  )}
-                </div>
-
-                <div className="bg-[#F8F9FB] border border-[#E5E7EB] rounded-[8px] p-4 space-y-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#6B7280] flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 text-[#2563EB]" />
-                    Destination Hotel
-                  </span>
-                  <p className="text-base font-bold text-[#111827]">
-                    {summary.hotel ? summary.hotel.name : summary.booking.hotel_id}
-                  </p>
-                  {summary.hotel && (
-                    <p className="text-xs text-[#6B7280]">
-                      {summary.hotel.city} · {summary.hotel.area}
-                      {summary.route ? ` (${summary.route.drive_minutes}m · ${summary.route.distance_km} km)` : ""}
-                    </p>
-                  )}
-                </div>
-
-                <div className="bg-[#F8F9FB] border border-[#E5E7EB] rounded-[8px] p-4 space-y-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#6B7280] flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-[#2563EB]" />
-                    Pickup Schedule
-                  </span>
-                  <p className="font-mono text-base font-bold text-[#111827]">
-                    {formatDateTimeLabel(summary.booking.pickup)}
-                  </p>
-                  <p className="font-mono text-xs text-[#6B7280]">
-                    Car Busy Slot: {summary.booking.busy_start.slice(11, 16)}–{summary.booking.busy_end.slice(11, 16)} (R6)
-                  </p>
-                </div>
-
-                <div className="bg-[#F8F9FB] border border-[#E5E7EB] rounded-[8px] p-4 space-y-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#6B7280] flex items-center gap-1.5">
-                    <CarTaxiFront className="h-4 w-4 text-[#2563EB]" />
-                    Assigned Supplier &amp; Car
-                  </span>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-base font-bold text-[#111827]">
-                      {summary.company ? summary.company.name : summary.booking.company_id}
-                    </p>
-                    {summary.company && (
-                      <span className="inline-flex items-center gap-1 font-mono text-xs text-[#6B7280]">
-                        <Star className="h-3.5 w-3.5 text-[#F59E0B] fill-[#F59E0B]" />
-                        {summary.company.rating.toFixed(1)}
+              <div className="p-6 space-y-6 bg-white">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-[8px] p-4 space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-2">
+                      <span className="h-7 w-7 ui-icon-circle ui-icon-indigo">
+                        <PlaneLanding className="h-3.5 w-3.5" />
                       </span>
+                      <span>Arrival Flight</span>
+                    </span>
+                    <p className="text-base font-bold text-[#0F172A]">
+                      {summary.flight
+                        ? `${summary.flight.flight_id} · ${summary.flight.airline}`
+                        : summary.booking.flight_id}
+                    </p>
+                    {summary.flight && (
+                      <p className="font-mono text-xs text-[#64748B]">
+                        {summary.flight.from} → {summary.flight.to} · Lands{" "}
+                        {formatDateTimeLabel(summary.flight.arrival_local)}
+                      </p>
                     )}
                   </div>
-                  <p className="font-mono text-xs text-[#6B7280]">
-                    Vehicle {summary.booking.vehicle_id}
-                    {summary.vehicle
-                      ? ` · ${summary.vehicle.type} (${summary.vehicle.seats} seats, ${summary.vehicle.large_bags}L/${summary.vehicle.small_bags}S bags)`
-                      : ""}
-                  </p>
-                </div>
-              </div>
 
-              {summary.request && (
-                <div className="pt-4 border-t border-[#E5E7EB] flex flex-wrap items-center justify-between gap-3 text-sm text-[#6B7280]">
-                  <div className="flex flex-wrap items-center gap-4">
-                    <span className="inline-flex items-center gap-1.5 text-[#111827] font-medium">
-                      <Users className="h-4 w-4 text-[#2563EB]" />
-                      {summary.request.traveler_name} · {summary.request.adults} adult
-                      {summary.request.adults === 1 ? "" : "s"}
-                      {summary.request.child_ages.length > 0
-                        ? ` + ${summary.request.child_ages.length} child (${summary.request.child_ages.join(", ")}y)`
-                        : ""}
+                  <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-[8px] p-4 space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-2">
+                      <span className="h-7 w-7 ui-icon-circle ui-icon-indigo">
+                        <MapPin className="h-3.5 w-3.5" />
+                      </span>
+                      <span>Destination Hotel</span>
                     </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Luggage className="h-4 w-4 text-[#6B7280]" />
-                      {summary.request.large_bags} large · {summary.request.small_bags} small bags
-                    </span>
+                    <p className="text-base font-bold text-[#0F172A]">
+                      {summary.hotel ? summary.hotel.name : summary.booking.hotel_id}
+                    </p>
+                    {summary.hotel && (
+                      <p className="text-xs text-[#64748B]">
+                        {summary.hotel.city} · {summary.hotel.area}
+                        {summary.route ? ` (${summary.route.drive_minutes}m · ${summary.route.distance_km} km)` : ""}
+                      </p>
+                    )}
                   </div>
 
-                  {onOpenSupplier && (
-                    <button
-                      type="button"
-                      onClick={() => onOpenSupplier(summary.booking.company_id)}
-                      className="text-sm font-medium text-[#2563EB] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Building2 className="h-4 w-4" />
-                      <span>Open {summary.company?.name ?? "Supplier"} Workspace</span>
-                    </button>
-                  )}
+                  <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-[8px] p-4 space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-2">
+                      <span className="h-7 w-7 ui-icon-circle ui-icon-amber">
+                        <Clock className="h-3.5 w-3.5" />
+                      </span>
+                      <span>Pickup Schedule</span>
+                    </span>
+                    <p className="font-mono text-base font-bold text-[#0F172A]">
+                      {formatDateTimeLabel(summary.booking.pickup)}
+                    </p>
+                    <p className="font-mono text-xs text-[#B45309]">
+                      Car Busy Slot: {summary.booking.busy_start.slice(11, 16)}–{summary.booking.busy_end.slice(11, 16)} (R6)
+                    </p>
+                  </div>
+
+                  <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-[8px] p-4 space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-2">
+                      <span className="h-7 w-7 ui-icon-circle ui-icon-teal">
+                        <CarTaxiFront className="h-3.5 w-3.5" />
+                      </span>
+                      <span>Assigned Supplier &amp; Car</span>
+                    </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-base font-bold text-[#0F172A]">
+                        {summary.company ? summary.company.name : summary.booking.company_id}
+                      </p>
+                      {summary.company && (
+                        <span className="inline-flex items-center gap-1 font-mono text-xs text-[#B45309] bg-[#FEF3C7] px-2 py-0.5 rounded-full">
+                          <Star className="h-3 w-3 text-[#F59E0B] fill-[#F59E0B]" />
+                          {summary.company.rating.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-mono text-xs text-[#0F766E] font-medium">
+                      Vehicle {summary.booking.vehicle_id}
+                      {summary.vehicle
+                        ? ` · ${summary.vehicle.type} (${summary.vehicle.seats} seats, ${summary.vehicle.large_bags}L/${summary.vehicle.small_bags}S bags)`
+                        : ""}
+                    </p>
+                  </div>
                 </div>
-              )}
+
+                {summary.request && (
+                  <div className="pt-4 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-sm text-[#64748B]">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span className="inline-flex items-center gap-2 text-[#0F172A] font-medium">
+                        <span className="h-7 w-7 ui-icon-circle ui-icon-indigo">
+                          <Users className="h-3.5 w-3.5" />
+                        </span>
+                        <span>
+                          {summary.request.traveler_name} · {summary.request.adults} adult
+                          {summary.request.adults === 1 ? "" : "s"}
+                          {summary.request.child_ages.length > 0
+                            ? ` + ${summary.request.child_ages.length} child (${summary.request.child_ages.join(", ")}y)`
+                            : ""}
+                        </span>
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Luggage className="h-4 w-4 text-[#64748B]" />
+                        {summary.request.large_bags} large · {summary.request.small_bags} small bags
+                      </span>
+                    </div>
+
+                    {onOpenSupplier && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenSupplier(summary.booking.company_id)}
+                        className="text-sm font-semibold text-[#0F766E] hover:text-[#115E59] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Building2 className="h-4 w-4" />
+                        <span>Open {summary.company?.name ?? "Supplier"} Workspace</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="ui-card space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4">
-                <div className="flex items-center gap-2">
-                  <CalendarClock className="h-5 w-5 text-[#2563EB]" />
-                  <h2 className="text-lg font-bold text-[#111827]">
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="h-8 w-8 ui-icon-circle ui-icon-amber">
+                    <CalendarClock className="h-4 w-4" />
+                  </span>
+                  <h2 className="text-lg font-bold text-[#0F172A]">
                     Change Request History ({summary.change_requests.length})
                   </h2>
                 </div>
@@ -512,7 +533,7 @@ export function BookingSummaryPage({
               </div>
 
               {summary.change_requests.length === 0 ? (
-                <p className="text-sm text-[#6B7280]">
+                <p className="text-sm text-[#64748B]">
                   No flight or pickup changes have been requested for this booking yet.
                 </p>
               ) : (
@@ -520,10 +541,10 @@ export function BookingSummaryPage({
                   {summary.change_requests.map((chg) => (
                     <div
                       key={chg.change_id}
-                      className="bg-[#F8F9FB] border border-[#E5E7EB] rounded-[8px] p-4 space-y-2.5"
+                      className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-[8px] p-4 space-y-2.5"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-[6px] bg-white border border-[#E5E7EB] text-[#111827]">
+                        <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-[6px] bg-[#EEF2FF] border border-[#C7D2FE] text-[#4338CA]">
                           {chg.change_id}
                         </span>
                         <span className={getChangeBadgeClass(chg.status)}>
@@ -531,18 +552,18 @@ export function BookingSummaryPage({
                         </span>
                       </div>
 
-                      <div className="text-sm text-[#111827] flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs text-[#6B7280]">
+                      <div className="text-sm text-[#0F172A] flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs text-[#64748B]">
                           {chg.prev_flight_id} ({formatDateTimeLabel(chg.prev_pickup)})
                         </span>
-                        <ArrowRight className="h-3.5 w-3.5 text-[#2563EB]" />
-                        <span className="font-mono text-xs font-semibold text-[#111827]">
+                        <ArrowRight className="h-3.5 w-3.5 text-[#4F46E5]" />
+                        <span className="font-mono text-xs font-semibold text-[#0F172A]">
                           {chg.new_flight_id} ({formatDateTimeLabel(chg.new_pickup)})
                         </span>
                       </div>
 
                       {chg.decision_reason && (
-                        <p className="text-xs text-[#6B7280]">
+                        <p className="text-xs text-[#64748B]">
                           {chg.decision_reason}
                         </p>
                       )}
@@ -553,15 +574,19 @@ export function BookingSummaryPage({
             </div>
           </div>
 
-          <div className="lg:col-span-5 ui-card space-y-5">
-            <div className="border-b border-[#E5E7EB] pb-4">
+          <div
+            className={`lg:col-span-5 ui-card ${
+              hasPendingChange ? "ui-top-amber" : "ui-top-indigo"
+            } space-y-5`}
+          >
+            <div className="border-b border-[#E2E8F0] pb-4">
               <div className="flex items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-[#111827]">
+                <h2 className="text-lg font-bold text-[#0F172A]">
                   Request Flight or Pickup Change
                 </h2>
-                <span className="ui-badge ui-badge-neutral font-mono">R9 · M7</span>
+                <span className="ui-badge ui-badge-accent font-mono">R9 · M7</span>
               </div>
-              <p className="text-sm text-[#6B7280] mt-1">
+              <p className="text-sm text-[#64748B] mt-1">
                 Send a new arrival flight or pickup time to {summary.company?.name ?? "your supplier"}. Rejected changes keep your current confirmed booking.
               </p>
             </div>
@@ -590,7 +615,7 @@ export function BookingSummaryPage({
                   <button
                     type="button"
                     onClick={() => onOpenSupplier(summary.booking.company_id)}
-                    className="text-xs font-semibold text-[#15803D] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-semibold text-[#0F766E] hover:text-[#115E59] hover:underline inline-flex items-center gap-1 cursor-pointer"
                   >
                     <span>Switch to {summary.company?.name ?? "Supplier"} to Accept / Reject</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -613,7 +638,7 @@ export function BookingSummaryPage({
               <div>
                 <label
                   htmlFor="change-flight-select"
-                  className="block text-sm font-medium text-[#111827] mb-1.5"
+                  className="block text-sm font-medium text-[#0F172A] mb-1.5"
                 >
                   Arrival Flight (Keep current or choose new flight)
                 </label>
@@ -622,18 +647,18 @@ export function BookingSummaryPage({
                     id="change-flight-select"
                     value={newFlightId}
                     onChange={(e) => setNewFlightId(e.target.value)}
-                    className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#111827] focus:outline-none cursor-pointer"
+                    className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#0F172A] focus:outline-none cursor-pointer"
                   >
                     {flightsGrouped.sameCityFlights.length > 0 && (
                       <optgroup
                         label={`Flights serving ${summary.hotel?.city ?? "hotel city"} (${flightsGrouped.sameCityFlights.length})`}
-                        className="bg-white text-[#6B7280]"
+                        className="bg-white text-[#64748B]"
                       >
                         {flightsGrouped.sameCityFlights.map((fl) => (
                           <option
                             key={fl.flight_id}
                             value={fl.flight_id}
-                            className="bg-white text-[#111827]"
+                            className="bg-white text-[#0F172A]"
                           >
                             {fl.flight_id} · {fl.from} → {fl.to} · Lands {formatDateTimeLabel(fl.arrival_local)}
                             {fl.flight_id === summary.booking.flight_id ? " (Current)" : ""}
@@ -644,13 +669,13 @@ export function BookingSummaryPage({
                     {flightsGrouped.otherFlights.length > 0 && (
                       <optgroup
                         label={`Other catalog flights (${flightsGrouped.otherFlights.length})`}
-                        className="bg-white text-[#6B7280]"
+                        className="bg-white text-[#64748B]"
                       >
                         {flightsGrouped.otherFlights.map((fl) => (
                           <option
                             key={fl.flight_id}
                             value={fl.flight_id}
-                            className="bg-white text-[#111827]"
+                            className="bg-white text-[#0F172A]"
                           >
                             {fl.flight_id} · {fl.from} → {fl.to} · Lands {formatDateTimeLabel(fl.arrival_local)}
                           </option>
@@ -658,7 +683,7 @@ export function BookingSummaryPage({
                       </optgroup>
                     )}
                   </select>
-                  <ChevronDown className="h-4 w-4 text-[#6B7280] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="h-4 w-4 text-[#4F46E5] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
@@ -666,7 +691,7 @@ export function BookingSummaryPage({
                 <div className="flex items-center justify-between mb-1.5">
                   <label
                     htmlFor="change-pickup-input"
-                    className="text-sm font-medium text-[#111827]"
+                    className="text-sm font-medium text-[#0F172A]"
                   >
                     New Pickup Time (Local Airport Time · R2)
                   </label>
@@ -674,7 +699,7 @@ export function BookingSummaryPage({
                     <button
                       type="button"
                       onClick={() => setNewPickup(earliestNewPickup)}
-                      className="text-xs font-medium text-[#2563EB] hover:underline cursor-pointer"
+                      className="text-xs font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline cursor-pointer"
                     >
                       Earliest {earliestNewPickup.slice(11, 16)}
                     </button>
@@ -687,7 +712,7 @@ export function BookingSummaryPage({
                   onChange={(e) => setNewPickup(e.target.value)}
                   className="ui-input w-full px-3.5 font-mono text-sm"
                 />
-                <p className="text-xs text-[#6B7280] mt-1.5">
+                <p className="text-xs text-[#64748B] mt-1.5">
                   Must be at least 60 minutes after flight landing (R2). Leave blank when changing flights to default to landing + 60m.
                 </p>
               </div>

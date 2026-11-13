@@ -74,6 +74,16 @@ function getOfferStatusBadge(status: OfferStatus): { label: string; className: s
   return { label: "Expired", className: "ui-badge ui-badge-neutral" };
 }
 
+function getOfferTopBorderClass(status: OfferStatus): string {
+  if (status === "BOOKED") {
+    return "ui-top-green";
+  }
+  if (status === "OPEN") {
+    return "ui-top-teal";
+  }
+  return "border-t-[3px] border-t-[#CBD5E1]";
+}
+
 function formatExpiryCountdown(
   expiresAt: string | null,
   nowMs: number
@@ -496,19 +506,40 @@ export function TravelerWorkspace({
     }
   }
 
+  const priceRangeFillPercent = useMemo(() => {
+    if (!quote) {
+      return 60;
+    }
+    const val = Number(priceInr);
+    if (!Number.isFinite(val) || priceInr.trim() === "") {
+      return 50;
+    }
+    const span = quote.price_max_inr - quote.price_min_inr;
+    if (span <= 0) {
+      return 100;
+    }
+    const rawPct = ((val - quote.price_min_inr) / span) * 100;
+    return Math.min(100, Math.max(8, Math.round(rawPct)));
+  }, [quote, priceInr]);
+
   return (
     <section className="panel-enter space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#E5E7EB] pb-6">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB] mb-1.5">
-            Traveler Portal
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827]">
-            Post a Ride Request &amp; Compare Offers
-          </h1>
-          <p className="text-base text-[#6B7280] mt-1.5">
-            Choose your arrival flight and hotel, enter your target price within the route range, and review assigned taxis.
-          </p>
+      <div className="ui-card ui-top-indigo flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 ui-icon-circle ui-icon-indigo border border-[#C7D2FE] mt-0.5">
+            <PlaneLanding className="h-6 w-6 stroke-[1.8]" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#4F46E5] mb-1">
+              Traveler Portal
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
+              Post a Ride Request &amp; Compare Offers
+            </h1>
+            <p className="text-base text-[#64748B] mt-1">
+              Choose your arrival flight and hotel, enter your target price within the route range, and review assigned taxis.
+            </p>
+          </div>
         </div>
 
         <button
@@ -516,18 +547,18 @@ export function TravelerWorkspace({
           onClick={handlePrefillMenonDemo}
           className="ui-btn-secondary ui-focus px-4 text-sm inline-flex items-center gap-2 cursor-pointer"
         >
-          <Sparkles className="h-4 w-4 text-[#2563EB]" />
+          <Sparkles className="h-4 w-4 text-[#4F46E5]" />
           <span>Pre-fill Menon Family Demo</span>
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-5 ui-card">
-          <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4 mb-6">
-            <h2 className="text-lg font-bold text-[#111827]">
+        <div className="lg:col-span-5 ui-card ui-top-indigo">
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4 mb-6">
+            <h2 className="text-lg font-bold text-[#0F172A]">
               New Ride Request
             </h2>
-            <span className="ui-badge ui-badge-neutral font-mono">
+            <span className="ui-badge ui-badge-accent font-mono">
               Rules R1 · R2 · R3
             </span>
           </div>
@@ -562,7 +593,7 @@ export function TravelerWorkspace({
             <div>
               <label
                 htmlFor="traveler-name"
-                className="block text-sm font-medium text-[#111827] mb-1.5"
+                className="block text-sm font-medium text-[#0F172A] mb-1.5"
               >
                 Traveler / Family Name
               </label>
@@ -572,7 +603,7 @@ export function TravelerWorkspace({
                 value={travelerName}
                 onChange={(e) => setTravelerName(e.target.value)}
                 placeholder="e.g. Menon Family"
-                className="ui-input w-full px-3.5 text-base placeholder:text-[#6B7280]"
+                className="ui-input w-full px-3.5 text-base placeholder:text-[#64748B]"
               />
             </div>
 
@@ -580,7 +611,7 @@ export function TravelerWorkspace({
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <label
                   htmlFor="flight-select"
-                  className="text-sm font-medium text-[#111827]"
+                  className="text-sm font-medium text-[#0F172A]"
                 >
                   Arrival Flight
                 </label>
@@ -590,8 +621,8 @@ export function TravelerWorkspace({
                     onClick={() => setAirportFilter("ALL")}
                     className={`px-2.5 py-0.5 rounded-[6px] font-mono text-xs border cursor-pointer ui-interactive ${
                       airportFilter === "ALL"
-                        ? "bg-[#2563EB] text-white border-[#2563EB] font-semibold"
-                        : "bg-white text-[#6B7280] border-[#D1D5DB] hover:bg-[#F8F9FB] hover:text-[#111827]"
+                        ? "bg-[#4F46E5] text-white border-[#4F46E5] font-semibold"
+                        : "bg-[#F8FAFC] text-[#64748B] border-[#CBD5E1] hover:bg-[#EEF2FF] hover:text-[#4F46E5] hover:border-[#C7D2FE]"
                     }`}
                   >
                     ALL
@@ -603,8 +634,8 @@ export function TravelerWorkspace({
                       onClick={() => setAirportFilter(airport.code)}
                       className={`px-2.5 py-0.5 rounded-[6px] font-mono text-xs border cursor-pointer ui-interactive ${
                         airportFilter === airport.code
-                          ? "bg-[#2563EB] text-white border-[#2563EB] font-semibold"
-                          : "bg-white text-[#6B7280] border-[#D1D5DB] hover:bg-[#F8F9FB] hover:text-[#111827]"
+                          ? "bg-[#4F46E5] text-white border-[#4F46E5] font-semibold"
+                          : "bg-[#F8FAFC] text-[#64748B] border-[#CBD5E1] hover:bg-[#EEF2FF] hover:text-[#4F46E5] hover:border-[#C7D2FE]"
                       }`}
                     >
                       {airport.code}
@@ -618,29 +649,29 @@ export function TravelerWorkspace({
                   id="flight-select"
                   value={flightId}
                   onChange={(e) => setFlightId(e.target.value)}
-                  className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#111827] focus:outline-none cursor-pointer"
+                  className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#0F172A] focus:outline-none cursor-pointer"
                 >
-                  <option value="" className="bg-white text-[#6B7280]">
+                  <option value="" className="bg-white text-[#64748B]">
                     Select arrival flight ({filteredFlights.length})...
                   </option>
                   {filteredFlights.map((flight) => (
                     <option
                       key={flight.flight_id}
                       value={flight.flight_id}
-                      className="bg-white text-[#111827]"
+                      className="bg-white text-[#0F172A]"
                     >
                       {flight.flight_id} · {flight.from} → {flight.to} · Lands {formatDateTimeLabel(flight.arrival_local)} ({flight.airline})
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="h-4 w-4 text-[#6B7280] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="h-4 w-4 text-[#4F46E5] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
             <div>
               <label
                 htmlFor="hotel-select"
-                className="block text-sm font-medium text-[#111827] mb-1.5"
+                className="block text-sm font-medium text-[#0F172A] mb-1.5"
               >
                 Destination Hotel
               </label>
@@ -649,22 +680,22 @@ export function TravelerWorkspace({
                   id="hotel-select"
                   value={hotelId}
                   onChange={(e) => setHotelId(e.target.value)}
-                  className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#111827] focus:outline-none cursor-pointer"
+                  className="w-full h-full appearance-none bg-transparent pl-3.5 pr-9 text-sm text-[#0F172A] focus:outline-none cursor-pointer"
                 >
-                  <option value="" className="bg-white text-[#6B7280]">
+                  <option value="" className="bg-white text-[#64748B]">
                     Select hotel ({allHotels.length})...
                   </option>
                   {hotelsByCity.map(([city, cityHotels]) => (
                     <optgroup
                       key={city}
                       label={`${city} (${cityHotels.length})`}
-                      className="bg-white text-[#6B7280]"
+                      className="bg-white text-[#64748B]"
                     >
                       {cityHotels.map((hotel) => (
                         <option
                           key={hotel.hotel_id}
                           value={hotel.hotel_id}
-                          className="bg-white text-[#111827]"
+                          className="bg-white text-[#0F172A]"
                         >
                           {hotel.name} · {hotel.area} ({hotel.hotel_id})
                         </option>
@@ -672,12 +703,12 @@ export function TravelerWorkspace({
                     </optgroup>
                   ))}
                 </select>
-                <ChevronDown className="h-4 w-4 text-[#6B7280] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="h-4 w-4 text-[#4F46E5] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
             {isQuoting && (
-              <div className="bg-[#F8F9FB] border border-[#E5E7EB] rounded-[6px] p-4 text-sm text-[#6B7280]">
+              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[8px] p-4 text-sm text-[#92400E]">
                 Calculating route range &amp; earliest pickup...
               </div>
             )}
@@ -696,35 +727,47 @@ export function TravelerWorkspace({
             {quote && !isQuoting && (
               <div className="ui-alert-info p-4 space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-[#6B7280]">
-                    Suggested Route Range (R3)
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#92400E]">
+                    <span className="h-6 w-6 ui-icon-circle ui-icon-amber">
+                      <IndianRupee className="h-3.5 w-3.5" />
+                    </span>
+                    <span>Suggested Route Range (R3)</span>
                   </span>
-                  <span className="font-mono text-base font-bold text-[#2563EB]">
+                  <span className="font-mono text-base font-bold text-[#B45309]">
                     {formatInr(quote.price_min_inr)} – {formatInr(quote.price_max_inr)}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2.5 border-t border-[#E5E7EB] text-xs">
+                <div className="space-y-1">
+                  <div className="h-2 w-full rounded-full bg-[#FDE68A] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[#F59E0B] transition-all duration-150"
+                      style={{ width: `${priceRangeFillPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#FDE68A] text-xs">
                   <div>
-                    <span className="text-[#6B7280] block mb-0.5">Earliest Pickup (R2)</span>
-                    <span className="font-mono font-medium text-[#111827]">
+                    <span className="text-[#92400E] block mb-0.5">Earliest Pickup (R2)</span>
+                    <span className="font-mono font-semibold text-[#0F172A]">
                       {formatDateTimeLabel(quote.earliest_pickup)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[#6B7280] block mb-0.5">Route Distance</span>
-                    <span className="font-mono font-medium text-[#111827]">
+                    <span className="text-[#92400E] block mb-0.5">Route Distance</span>
+                    <span className="font-mono font-semibold text-[#0F172A]">
                       {quote.drive_minutes}m · {quote.distance_km} km
                     </span>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <span className="text-xs text-[#6B7280]">Quick price:</span>
+                  <span className="text-xs font-medium text-[#92400E]">Quick price:</span>
                   <button
                     type="button"
                     onClick={() => setPriceInr(String(quote.price_min_inr))}
-                    className="px-2.5 py-1 rounded-[6px] bg-white border border-[#D1D5DB] hover:border-[#2563EB] hover:text-[#2563EB] font-mono text-xs text-[#111827] cursor-pointer ui-interactive"
+                    className="px-2.5 py-1 rounded-[6px] bg-white border border-[#FCD34D] hover:border-[#F59E0B] hover:bg-[#FEF3C7] font-mono text-xs font-medium text-[#92400E] cursor-pointer ui-interactive"
                   >
                     Min {formatInr(quote.price_min_inr)}
                   </button>
@@ -735,14 +778,14 @@ export function TravelerWorkspace({
                         String(Math.round((quote.price_min_inr + quote.price_max_inr) / 2))
                       )
                     }
-                    className="px-2.5 py-1 rounded-[6px] bg-white border border-[#D1D5DB] hover:border-[#2563EB] hover:text-[#2563EB] font-mono text-xs text-[#111827] cursor-pointer ui-interactive"
+                    className="px-2.5 py-1 rounded-[6px] bg-white border border-[#FCD34D] hover:border-[#F59E0B] hover:bg-[#FEF3C7] font-mono text-xs font-medium text-[#92400E] cursor-pointer ui-interactive"
                   >
                     Mid {formatInr(Math.round((quote.price_min_inr + quote.price_max_inr) / 2))}
                   </button>
                   <button
                     type="button"
                     onClick={() => setPriceInr(String(quote.price_max_inr))}
-                    className="px-2.5 py-1 rounded-[6px] bg-white border border-[#D1D5DB] hover:border-[#2563EB] hover:text-[#2563EB] font-mono text-xs text-[#111827] cursor-pointer ui-interactive"
+                    className="px-2.5 py-1 rounded-[6px] bg-white border border-[#FCD34D] hover:border-[#F59E0B] hover:bg-[#FEF3C7] font-mono text-xs font-medium text-[#92400E] cursor-pointer ui-interactive"
                   >
                     Max {formatInr(quote.price_max_inr)}
                   </button>
@@ -754,7 +797,7 @@ export function TravelerWorkspace({
               <div>
                 <label
                   htmlFor="adults-input"
-                  className="block text-sm font-medium text-[#111827] mb-1.5"
+                  className="block text-sm font-medium text-[#0F172A] mb-1.5"
                 >
                   Adults
                 </label>
@@ -770,7 +813,7 @@ export function TravelerWorkspace({
               <div>
                 <label
                   htmlFor="large-bags-input"
-                  className="block text-sm font-medium text-[#111827] mb-1.5"
+                  className="block text-sm font-medium text-[#0F172A] mb-1.5"
                 >
                   Large Bags
                 </label>
@@ -786,7 +829,7 @@ export function TravelerWorkspace({
               <div>
                 <label
                   htmlFor="small-bags-input"
-                  className="block text-sm font-medium text-[#111827] mb-1.5"
+                  className="block text-sm font-medium text-[#0F172A] mb-1.5"
                 >
                   Small Bags
                 </label>
@@ -802,21 +845,21 @@ export function TravelerWorkspace({
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-medium text-[#111827]">
+                <span className="text-sm font-medium text-[#0F172A]">
                   Children&apos;s Ages (0–17)
                 </span>
                 <button
                   type="button"
                   onClick={handleAddChild}
-                  className="px-3 py-1.5 rounded-[6px] bg-white border border-[#D1D5DB] hover:bg-[#F8F9FB] hover:border-[#9CA3AF] text-xs font-medium text-[#111827] inline-flex items-center gap-1 cursor-pointer ui-interactive"
+                  className="px-3 py-1.5 rounded-[6px] bg-[#EEF2FF] border border-[#C7D2FE] hover:bg-[#E0E7FF] text-xs font-semibold text-[#4338CA] inline-flex items-center gap-1 cursor-pointer ui-interactive"
                 >
-                  <Plus className="h-3.5 w-3.5 text-[#2563EB]" />
+                  <Plus className="h-3.5 w-3.5 text-[#4F46E5]" />
                   <span>Add Child</span>
                 </button>
               </div>
 
               {childAges.length === 0 ? (
-                <p className="text-sm text-[#6B7280]">
+                <p className="text-sm text-[#64748B]">
                   No children added. Click &ldquo;Add Child&rdquo; to include child ages.
                 </p>
               ) : (
@@ -824,9 +867,9 @@ export function TravelerWorkspace({
                   {childAges.map((age, index) => (
                     <div
                       key={index}
-                      className="inline-flex items-center bg-white border border-[#D1D5DB] rounded-[6px] h-11 overflow-hidden focus-within:border-[#2563EB]"
+                      className="inline-flex items-center bg-[#F8FAFC] border border-[#CBD5E1] rounded-[6px] h-11 overflow-hidden focus-within:border-[#4F46E5] focus-within:bg-white"
                     >
-                      <span className="px-2.5 text-xs font-medium text-[#6B7280] bg-[#F8F9FB] h-full inline-flex items-center border-r border-[#E5E7EB]">
+                      <span className="px-2.5 text-xs font-semibold text-[#4338CA] bg-[#EEF2FF] h-full inline-flex items-center border-r border-[#C7D2FE]">
                         #{index + 1}
                       </span>
                       <input
@@ -834,13 +877,13 @@ export function TravelerWorkspace({
                         aria-label={`Child ${index + 1} age`}
                         value={age}
                         onChange={(e) => handleUpdateChildAge(index, e.target.value)}
-                        className="w-16 h-full px-2.5 bg-white font-mono text-sm text-[#111827] focus:outline-none"
+                        className="w-16 h-full px-2.5 bg-transparent font-mono text-sm text-[#0F172A] focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => handleRemoveChild(index)}
                         aria-label={`Remove child ${index + 1}`}
-                        className="h-full px-2.5 text-[#6B7280] hover:text-[#DC2626] hover:bg-[#FEF2F2] border-l border-[#E5E7EB] cursor-pointer ui-interactive"
+                        className="h-full px-2.5 text-[#64748B] hover:text-[#DC2626] hover:bg-[#FEF2F2] border-l border-[#E2E8F0] cursor-pointer ui-interactive"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -854,16 +897,16 @@ export function TravelerWorkspace({
               <div className="flex items-center justify-between mb-1.5">
                 <label
                   htmlFor="pickup-input"
-                  className="text-sm font-medium text-[#111827]"
+                  className="text-sm font-medium text-[#0F172A]"
                 >
                   Pickup Time (Optional · Local Airport Time)
                 </label>
-                <div className="flex items-center gap-3 text-xs font-medium">
+                <div className="flex items-center gap-3 text-xs font-semibold">
                   {quote && (
                     <button
                       type="button"
                       onClick={() => setPickup(quote.earliest_pickup)}
-                      className="text-[#2563EB] hover:underline cursor-pointer"
+                      className="text-[#4F46E5] hover:text-[#4338CA] hover:underline cursor-pointer"
                     >
                       Use {quote.earliest_pickup.slice(11, 16)}
                     </button>
@@ -872,7 +915,7 @@ export function TravelerWorkspace({
                     <button
                       type="button"
                       onClick={() => setPickup("")}
-                      className="text-[#6B7280] hover:text-[#111827] cursor-pointer"
+                      className="text-[#64748B] hover:text-[#0F172A] cursor-pointer"
                     >
                       Clear
                     </button>
@@ -886,7 +929,7 @@ export function TravelerWorkspace({
                 onChange={(e) => setPickup(e.target.value)}
                 className="ui-input w-full px-3.5 font-mono text-sm"
               />
-              <p className="text-xs text-[#6B7280] mt-1.5">
+              <p className="text-xs text-[#64748B] mt-1.5">
                 Leave blank to default to landing + 60 minutes (R2).
               </p>
             </div>
@@ -895,7 +938,7 @@ export function TravelerWorkspace({
               <div>
                 <label
                   htmlFor="car-type-select"
-                  className="block text-sm font-medium text-[#111827] mb-1.5"
+                  className="block text-sm font-medium text-[#0F172A] mb-1.5"
                 >
                   Car Type (Optional · G2)
                 </label>
@@ -904,44 +947,44 @@ export function TravelerWorkspace({
                     id="car-type-select"
                     value={carType}
                     onChange={(e) => setCarType(e.target.value)}
-                    className="w-full h-full appearance-none bg-transparent pl-3.5 pr-8 text-sm text-[#111827] focus:outline-none cursor-pointer"
+                    className="w-full h-full appearance-none bg-transparent pl-3.5 pr-8 text-sm text-[#0F172A] focus:outline-none cursor-pointer"
                   >
-                    <option value="" className="bg-white text-[#111827]">
+                    <option value="" className="bg-white text-[#0F172A]">
                       Any Car Type
                     </option>
-                    <option value="HATCHBACK" className="bg-white text-[#111827]">
+                    <option value="HATCHBACK" className="bg-white text-[#0F172A]">
                       HATCHBACK
                     </option>
-                    <option value="SEDAN" className="bg-white text-[#111827]">
+                    <option value="SEDAN" className="bg-white text-[#0F172A]">
                       SEDAN
                     </option>
-                    <option value="SUV" className="bg-white text-[#111827]">
+                    <option value="SUV" className="bg-white text-[#0F172A]">
                       SUV
                     </option>
-                    <option value="BUS" className="bg-white text-[#111827]">
+                    <option value="BUS" className="bg-white text-[#0F172A]">
                       BUS
                     </option>
                   </select>
-                  <ChevronDown className="h-4 w-4 text-[#6B7280] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="h-4 w-4 text-[#4F46E5] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
               <div>
                 <label
                   htmlFor="price-input"
-                  className="block text-sm font-medium text-[#111827] mb-1.5"
+                  className="block text-sm font-medium text-[#0F172A] mb-1.5"
                 >
                   Your Offer Price (INR · R3)
                 </label>
                 <div className="relative">
-                  <IndianRupee className="h-4 w-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <IndianRupee className="h-4 w-4 text-[#D97706] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     id="price-input"
                     type="number"
                     value={priceInr}
                     onChange={(e) => setPriceInr(e.target.value)}
                     placeholder="e.g. 12000"
-                    className="ui-input w-full pl-9 pr-3.5 font-mono text-base placeholder:font-sans placeholder:text-[#6B7280]"
+                    className="ui-input w-full pl-9 pr-3.5 font-mono text-base placeholder:font-sans placeholder:text-[#64748B]"
                   />
                 </div>
               </div>
@@ -959,12 +1002,12 @@ export function TravelerWorkspace({
         </div>
 
         <div className="lg:col-span-7 space-y-5">
-          <div className="ui-card flex items-center justify-between">
+          <div className="ui-card flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-[#111827]">
+              <h2 className="text-lg font-bold text-[#0F172A]">
                 Ride Requests ({requests.length})
               </h2>
-              <p className="text-sm text-[#6B7280] mt-0.5">
+              <p className="text-sm text-[#64748B] mt-0.5">
                 Includes open requests, supplier eligibility diagnostics (M2), and assigned taxis.
               </p>
             </div>
@@ -973,7 +1016,7 @@ export function TravelerWorkspace({
               onClick={() => void loadRequests()}
               className="ui-btn-secondary ui-focus px-4 text-sm inline-flex items-center gap-2 cursor-pointer"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoadingRequests ? "animate-spin text-[#2563EB]" : "text-[#6B7280]"}`} />
+              <RefreshCw className={`h-4 w-4 ${isLoadingRequests ? "animate-spin text-[#4F46E5]" : ""}`} />
               <span>Refresh</span>
             </button>
           </div>
@@ -1005,24 +1048,24 @@ export function TravelerWorkspace({
               return (
                 <div
                   key={item.request_id}
-                  className={`bg-white rounded-[8px] border overflow-hidden ui-card-hover ${
-                    isExpanded ? "border-[#2563EB]" : "border-[#E5E7EB]"
-                  }`}
+                  className={`ui-card-flush ui-card-hover ${
+                    item.status === "BOOKED" ? "ui-top-green" : "ui-top-indigo"
+                  } ${isExpanded ? "ring-2 ring-[#4F46E5]/20 border-[#A5B4FC]" : ""}`}
                 >
                   <div className="p-6 space-y-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-2.5">
-                        <span className="font-mono text-xs font-semibold text-[#111827] px-2.5 py-1 rounded-[6px] bg-[#F8F9FB] border border-[#E5E7EB]">
+                        <span className="font-mono text-xs font-semibold text-[#4338CA] px-2.5 py-1 rounded-[6px] bg-[#EEF2FF] border border-[#C7D2FE]">
                           {item.request_id}
                         </span>
-                        <span className="text-base font-bold text-[#111827]">
+                        <span className="text-base font-bold text-[#0F172A]">
                           {item.traveler_name}
                         </span>
                         <span
                           className={
                             item.status === "BOOKED"
                               ? "ui-badge ui-badge-booked"
-                              : "ui-badge ui-badge-pending"
+                              : "ui-badge ui-badge-open"
                           }
                         >
                           {item.status}
@@ -1035,50 +1078,58 @@ export function TravelerWorkspace({
                       </div>
 
                       <div className="text-right">
-                        <span className="font-mono text-lg font-bold text-[#111827] block">
+                        <span className="font-mono text-lg font-bold text-[#0F172A] block">
                           {formatInr(item.price_inr)}
                         </span>
                         {item.route && (
-                          <span className="font-mono text-xs text-[#6B7280] block">
+                          <span className="font-mono text-xs text-[#B45309] bg-[#FFFBEB] border border-[#FDE68A] px-2 py-0.5 rounded-full inline-block mt-0.5">
                             Range {formatInr(item.route.price_min_inr)}–{formatInr(item.route.price_max_inr)}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-sm text-[#6B7280]">
-                      <div className="flex items-center gap-2">
-                        <PlaneLanding className="h-4 w-4 text-[#2563EB] shrink-0" />
-                        <span className="truncate text-[#111827] font-medium">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-[#64748B]">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-7 ui-icon-circle ui-icon-indigo">
+                          <PlaneLanding className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="truncate text-[#0F172A] font-medium">
                           {item.flight
                             ? `${item.flight.flight_id} (${item.flight.from} → ${item.flight.to})`
                             : item.flight_id}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-[#2563EB] shrink-0" />
-                        <span className="truncate text-[#111827] font-medium">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-7 ui-icon-circle ui-icon-teal">
+                          <MapPin className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="truncate text-[#0F172A] font-medium">
                           {item.hotel
                             ? `${item.hotel.name} · ${item.hotel.city} (${item.hotel.area})`
                             : item.hotel_id}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-[#6B7280] shrink-0" />
-                        <span className="font-mono text-xs sm:text-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-7 ui-icon-circle ui-icon-amber">
+                          <Clock className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="font-mono text-xs sm:text-sm text-[#0F172A]">
                           Pickup {formatDateTimeLabel(item.pickup)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-[#6B7280] shrink-0" />
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-7 ui-icon-circle ui-icon-indigo">
+                          <Users className="h-3.5 w-3.5" />
+                        </span>
                         <span>
                           {item.adults} adult{item.adults === 1 ? "" : "s"}
                           {item.child_ages.length > 0
                             ? ` + ${item.child_ages.length} child (${item.child_ages.join(", ")}y)`
                             : ""}
                         </span>
-                        <span className="text-[#D1D5DB]">·</span>
-                        <Luggage className="h-4 w-4 text-[#6B7280] shrink-0" />
+                        <span className="text-[#CBD5E1]">·</span>
+                        <Luggage className="h-4 w-4 text-[#64748B] shrink-0" />
                         <span>
                           {item.large_bags}L / {item.small_bags}S
                         </span>
@@ -1099,13 +1150,13 @@ export function TravelerWorkspace({
                       </div>
                     )}
 
-                    <div className="pt-4 border-t border-[#E5E7EB] flex flex-wrap items-center justify-between gap-3 text-sm">
+                    <div className="pt-4 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-sm">
                       <div>
                         {item.status === "BOOKED" && item.booking_number ? (
                           <button
                             type="button"
                             onClick={() => onOpenBooking(item.booking_number!)}
-                            className="font-mono font-semibold text-[#2563EB] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+                            className="font-mono font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
                           >
                             <span>Booking #{item.booking_number}</span>
                             <ArrowRight className="h-4 w-4" />
@@ -1115,10 +1166,10 @@ export function TravelerWorkspace({
                             0 eligible suppliers at {item.flight?.to ?? "arrival airport"}
                           </span>
                         ) : (
-                          <span className="text-[#6B7280]">
+                          <span className="text-[#64748B]">
                             {item.servability.servable_count} eligible supplier
                             {item.servability.servable_count === 1 ? "" : "s"} ·{" "}
-                            <span className="font-mono font-semibold text-[#111827]">
+                            <span className="font-mono font-semibold text-[#4F46E5]">
                               {item.open_offers_count}
                             </span>{" "}
                             open taxi offer{item.open_offers_count === 1 ? "" : "s"}
@@ -1135,22 +1186,22 @@ export function TravelerWorkspace({
                           Assigned Taxis ({item.total_offers_count})
                         </span>
                         {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-[#2563EB]" />
+                          <ChevronUp className="h-4 w-4 text-[#4F46E5]" />
                         ) : (
-                          <ChevronDown className="h-4 w-4 text-[#6B7280]" />
+                          <ChevronDown className="h-4 w-4 text-[#4F46E5]" />
                         )}
                       </button>
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className="border-t border-[#E5E7EB] bg-[#F8F9FB] p-6 space-y-4">
+                    <div className="border-t border-[#E2E8F0] bg-[#F4F6FB] p-6 space-y-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <h3 className="text-sm font-bold text-[#111827]">
+                          <h3 className="text-sm font-bold text-[#0F172A]">
                             Assigned Taxis ({expandedDetail ? expandedDetail.offers.length : item.total_offers_count})
                           </h3>
-                          <p className="text-xs text-[#6B7280] mt-0.5">
+                          <p className="text-xs text-[#64748B] mt-0.5">
                             Compare supplier fares, sort or filter offers (G5), and book or reject each car (M4 · R8).
                           </p>
                         </div>
@@ -1159,50 +1210,50 @@ export function TravelerWorkspace({
                           offerCarTypeFilter !== "ALL" ||
                           offerSort !== "") && (
                           <div className="flex flex-wrap items-center gap-2">
-                            <div className="relative ui-input-wrap">
+                            <div className="relative ui-input-wrap bg-white">
                               <select
                                 aria-label="Sort offers by price"
                                 value={offerSort}
                                 onChange={(e) => handleOfferSortChange(e.target.value)}
-                                className="h-full appearance-none bg-transparent pl-3 pr-8 text-xs font-medium text-[#111827] focus:outline-none cursor-pointer"
+                                className="h-full appearance-none bg-transparent pl-3 pr-8 text-xs font-medium text-[#0F172A] focus:outline-none cursor-pointer"
                               >
-                                <option value="" className="bg-white text-[#111827]">
+                                <option value="" className="bg-white text-[#0F172A]">
                                   Sort: Newest first
                                 </option>
-                                <option value="price_asc" className="bg-white text-[#111827]">
+                                <option value="price_asc" className="bg-white text-[#0F172A]">
                                   Price: Low to High (G5)
                                 </option>
-                                <option value="price_desc" className="bg-white text-[#111827]">
+                                <option value="price_desc" className="bg-white text-[#0F172A]">
                                   Price: High to Low (G5)
                                 </option>
                               </select>
-                              <ChevronDown className="h-3.5 w-3.5 text-[#6B7280] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              <ChevronDown className="h-3.5 w-3.5 text-[#4F46E5] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
 
-                            <div className="relative ui-input-wrap">
+                            <div className="relative ui-input-wrap bg-white">
                               <select
                                 aria-label="Filter offers by car type"
                                 value={offerCarTypeFilter}
                                 onChange={(e) => handleOfferCarTypeChange(e.target.value)}
-                                className="h-full appearance-none bg-transparent pl-3 pr-8 text-xs font-medium text-[#111827] focus:outline-none cursor-pointer"
+                                className="h-full appearance-none bg-transparent pl-3 pr-8 text-xs font-medium text-[#0F172A] focus:outline-none cursor-pointer"
                               >
-                                <option value="ALL" className="bg-white text-[#111827]">
+                                <option value="ALL" className="bg-white text-[#0F172A]">
                                   Car Type: All
                                 </option>
-                                <option value="HATCHBACK" className="bg-white text-[#111827]">
+                                <option value="HATCHBACK" className="bg-white text-[#0F172A]">
                                   HATCHBACK
                                 </option>
-                                <option value="SEDAN" className="bg-white text-[#111827]">
+                                <option value="SEDAN" className="bg-white text-[#0F172A]">
                                   SEDAN
                                 </option>
-                                <option value="SUV" className="bg-white text-[#111827]">
+                                <option value="SUV" className="bg-white text-[#0F172A]">
                                   SUV
                                 </option>
-                                <option value="BUS" className="bg-white text-[#111827]">
+                                <option value="BUS" className="bg-white text-[#0F172A]">
                                   BUS
                                 </option>
                               </select>
-                              <ChevronDown className="h-3.5 w-3.5 text-[#6B7280] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              <ChevronDown className="h-3.5 w-3.5 text-[#4F46E5] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
 
                             <button
@@ -1221,7 +1272,7 @@ export function TravelerWorkspace({
                             >
                               <RefreshCw
                                 className={`h-4 w-4 ${
-                                  isLoadingDetail ? "animate-spin text-[#2563EB]" : "text-[#6B7280]"
+                                  isLoadingDetail ? "animate-spin text-[#4F46E5]" : ""
                                 }`}
                               />
                             </button>
@@ -1256,13 +1307,13 @@ export function TravelerWorkspace({
                       )}
 
                       {isLoadingDetail ? (
-                        <p className="text-sm text-[#6B7280]">Loading assigned taxis...</p>
+                        <p className="text-sm text-[#64748B]">Loading assigned taxis...</p>
                       ) : !expandedDetail || expandedDetail.offers.length === 0 ? (
                         offerCarTypeFilter !== "ALL" ? (
-                          <div className="bg-white border border-[#E5E7EB] rounded-[8px] p-5 flex flex-wrap items-center justify-between gap-3">
-                            <p className="text-sm text-[#6B7280]">
+                          <div className="ui-card flex flex-wrap items-center justify-between gap-3">
+                            <p className="text-sm text-[#64748B]">
                               No assigned taxis match car type{" "}
-                              <span className="font-mono font-semibold text-[#111827]">
+                              <span className="font-mono font-semibold text-[#0F172A]">
                                 {offerCarTypeFilter}
                               </span>
                               .
@@ -1276,14 +1327,15 @@ export function TravelerWorkspace({
                             </button>
                           </div>
                         ) : (
-                          <p className="text-sm text-[#6B7280]">
+                          <p className="text-sm text-[#64748B]">
                             No taxi offers assigned yet. Switch to a Taxi Supplier workspace to assign a car and price.
                           </p>
                         )
                       ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-3.5">
                           {expandedDetail.offers.map((offer) => {
                             const statusBadge = getOfferStatusBadge(offer.status);
+                            const topBorderClass = getOfferTopBorderClass(offer.status);
                             const countdown =
                               offer.status === "OPEN"
                                 ? formatExpiryCountdown(offer.expires_at, nowMs)
@@ -1295,21 +1347,21 @@ export function TravelerWorkspace({
                             return (
                               <div
                                 key={offer.offer_id}
-                                className="bg-white border border-[#E5E7EB] rounded-[8px] p-4 space-y-3"
+                                className={`ui-card-flush ${topBorderClass} p-4 space-y-3`}
                               >
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                   <div className="space-y-1.5">
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <span className="text-base font-bold text-[#111827]">
+                                      <span className="text-base font-bold text-[#0F172A]">
                                         {offer.company_name}
                                       </span>
                                       {offer.company_rating !== null && (
-                                        <span className="inline-flex items-center gap-1 font-mono text-xs text-[#6B7280]">
-                                          <Star className="h-3.5 w-3.5 text-[#F59E0B] fill-[#F59E0B]" />
+                                        <span className="inline-flex items-center gap-1 font-mono text-xs text-[#B45309] bg-[#FEF3C7] px-2 py-0.5 rounded-full">
+                                          <Star className="h-3 w-3 text-[#F59E0B] fill-[#F59E0B]" />
                                           {offer.company_rating.toFixed(1)}
                                         </span>
                                       )}
-                                      <span className="ui-badge ui-badge-accent font-mono">
+                                      <span className="ui-badge ui-badge-teal font-mono">
                                         {offer.vehicle?.type ?? offer.vehicle_id} · {offer.vehicle_id}
                                       </span>
                                       <span className={statusBadge.className}>
@@ -1334,7 +1386,7 @@ export function TravelerWorkspace({
                                     </div>
 
                                     {offer.vehicle && (
-                                      <p className="font-mono text-xs text-[#6B7280]">
+                                      <p className="font-mono text-xs text-[#64748B]">
                                         {offer.vehicle.seats} seats · {offer.vehicle.large_bags}L /{" "}
                                         {offer.vehicle.small_bags}S bags · {offer.offer_id}
                                       </p>
@@ -1342,14 +1394,14 @@ export function TravelerWorkspace({
                                   </div>
 
                                   <div className="text-right">
-                                    <span className="font-mono text-lg font-bold text-[#111827] block">
+                                    <span className="font-mono text-lg font-bold text-[#0F172A] block">
                                       {formatInr(offer.price_inr)}
                                     </span>
                                     <span
                                       className={`font-mono text-xs font-medium block ${
                                         offer.price_delta_inr <= 0
                                           ? "text-[#15803D]"
-                                          : "text-[#6B7280]"
+                                          : "text-[#B45309]"
                                       }`}
                                     >
                                       {offer.price_delta_inr === 0
@@ -1362,7 +1414,7 @@ export function TravelerWorkspace({
                                 </div>
 
                                 {canActOnOffer && (
-                                  <div className="pt-3 border-t border-[#E5E7EB] flex flex-wrap items-center justify-end gap-2.5">
+                                  <div className="pt-3 border-t border-[#E2E8F0] flex flex-wrap items-center justify-end gap-2.5">
                                     <button
                                       type="button"
                                       disabled={actionOfferId !== null}
@@ -1384,8 +1436,8 @@ export function TravelerWorkspace({
                                 )}
 
                                 {offer.status === "BOOKED" && expandedDetail.booking && (
-                                  <div className="pt-3 border-t border-[#E5E7EB] flex items-center justify-between gap-2 text-xs">
-                                    <span className="text-[#15803D] font-medium">
+                                  <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between gap-2 text-xs">
+                                    <span className="text-[#15803D] font-semibold">
                                       Confirmed booking #{expandedDetail.booking.booking_number}
                                     </span>
                                     <button
@@ -1393,7 +1445,7 @@ export function TravelerWorkspace({
                                       onClick={() =>
                                         onOpenBooking(expandedDetail.booking!.booking_number)
                                       }
-                                      className="font-semibold text-[#2563EB] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                                      className="font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline inline-flex items-center gap-1 cursor-pointer"
                                     >
                                       <span>View Booking Summary</span>
                                       <ArrowRight className="h-3.5 w-3.5" />
