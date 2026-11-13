@@ -5,7 +5,10 @@ import mongoose from "mongoose";
 import fs from "node:fs";
 import path from "node:path";
 
-dotenv.config();
+const envOptions = {
+  path: path.resolve(__dirname, "../.env")
+};
+dotenv.config(envOptions);
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -40,6 +43,7 @@ app.get("/api/health", handleHealthCheck);
 async function startServer(): Promise<void> {
   try {
     const connectOptions = {
+      dbName: "airport_taxi_offers",
       serverSelectionTimeoutMS: 5000
     };
     await mongoose.connect(MONGODB_URI, connectOptions);
