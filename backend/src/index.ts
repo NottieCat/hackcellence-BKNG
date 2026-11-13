@@ -5,6 +5,8 @@ import mongoose from "mongoose";
 import fs from "node:fs";
 import path from "node:path";
 import { catalogRouter } from "./routes/catalogRoutes";
+import { requestRouter } from "./routes/requestRoutes";
+import { supplierRouter } from "./routes/supplierRoutes";
 import { seedDatabase } from "./seed/seedDatabase";
 import type { SeedSummary } from "./seed/seedDatabase";
 
@@ -46,6 +48,8 @@ function onServerListening(): void {
 
 app.get("/api/health", handleHealthCheck);
 app.use("/api", catalogRouter);
+app.use("/api", requestRouter);
+app.use("/api", supplierRouter);
 
 async function startServer(): Promise<void> {
   try {
