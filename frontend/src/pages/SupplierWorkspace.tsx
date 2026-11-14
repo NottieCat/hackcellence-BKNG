@@ -152,7 +152,11 @@ export function SupplierWorkspace({
         const next: Record<string, OfferDraft> = { ...prev };
         for (const item of data.servable_requests) {
           const reqId = item.request.request_id;
-          if (!next[reqId]) {
+          const existing = next[reqId];
+          const belongsToCurrentFleet = existing
+            ? item.vehicle_evaluations.some((ev) => ev.vehicle.vehicle_id === existing.vehicleId)
+            : false;
+          if (!existing || !belongsToCurrentFleet) {
             next[reqId] = buildInitialDraft(item);
           }
         }
@@ -174,6 +178,7 @@ export function SupplierWorkspace({
 
   useEffect(() => {
     setDashboard(null);
+    setDrafts({});
     setOfferErrors({});
     setOfferSuccess({});
     setChangeErrors({});
@@ -181,13 +186,34 @@ export function SupplierWorkspace({
     void loadDashboard();
   }, [loadDashboard]);
 
+  function resolveDraftForItem(
+    item: SupplierServableRequest,
+    stored?: OfferDraft
+  ): OfferDraft {
+    const fallback = buildInitialDraft(item);
+    if (!stored) {
+      return fallback;
+    }
+    const belongsToFleet = item.vehicle_evaluations.some(
+      (ev) => ev.vehicle.vehicle_id === stored.vehicleId
+    );
+    if (!belongsToFleet) {
+      return {
+        ...fallback,
+        priceInr: stored.priceInr || fallback.priceInr,
+        expirySeconds: stored.expirySeconds
+      };
+    }
+    return stored;
+  }
+
   function updateDraft(
     item: SupplierServableRequest,
     patch: Partial<OfferDraft>
   ): void {
     const reqId = item.request.request_id;
     setDrafts((prev) => {
-      const current = prev[reqId] ?? buildInitialDraft(item);
+      const current = resolveDraftForItem(item, prev[reqId]);
       return {
         ...prev,
         [reqId]: {
@@ -204,7 +230,7 @@ export function SupplierWorkspace({
   ): Promise<void> {
     event.preventDefault();
     const reqId = item.request.request_id;
-    const draft = drafts[reqId] ?? buildInitialDraft(item);
+    const draft = resolveDraftForItem(item, drafts[reqId]);
 
     setSubmittingReqId(reqId);
     setOfferErrors((prev) => ({ ...prev, [reqId]: null }));
@@ -613,7 +639,7 @@ export function SupplierWorkspace({
           <div className="space-y-5">
             {servableRequests.map((item, idx) => {
               const reqId = item.request.request_id;
-              const draft = drafts[reqId] ?? buildInitialDraft(item);
+              const draft = resolveDraftForItem(item, drafts[reqId]);
               const selectedEval = item.vehicle_evaluations.find(
                 (ev) => ev.vehicle.vehicle_id === draft.vehicleId
               );

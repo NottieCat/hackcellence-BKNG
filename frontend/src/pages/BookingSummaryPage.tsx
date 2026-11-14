@@ -206,6 +206,10 @@ export function BookingSummaryPage({
     ? addSixtyMinutesLocal(selectedNewFlight.arrival_local)
     : "";
 
+  const delayedOneHourPickup = summary?.booking.pickup
+    ? addSixtyMinutesLocal(summary.booking.pickup)
+    : "";
+
   async function handleCopyBookingNumber(): Promise<void> {
     if (!summary) {
       return;
@@ -839,22 +843,33 @@ export function BookingSummaryPage({
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                   <label
                     htmlFor="change-pickup-input"
                     className="text-xs font-semibold uppercase tracking-wider text-[#475569]"
                   >
                     Updated Pickup Time (Local Airport Time)
                   </label>
-                  {recommendedNewPickup && (
-                    <button
-                      type="button"
-                      onClick={() => setNewPickup(recommendedNewPickup)}
-                      className="text-xs font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline cursor-pointer"
-                    >
-                      Use +60m ({recommendedNewPickup.slice(11, 16)})
-                    </button>
-                  )}
+                  <div className="inline-flex items-center gap-2.5">
+                    {delayedOneHourPickup && (
+                      <button
+                        type="button"
+                        onClick={() => setNewPickup(delayedOneHourPickup)}
+                        className="text-xs font-semibold text-[#0D9488] hover:text-[#0F766E] hover:underline cursor-pointer"
+                      >
+                        +1 hr Delay ({delayedOneHourPickup.slice(11, 16)})
+                      </button>
+                    )}
+                    {recommendedNewPickup && (
+                      <button
+                        type="button"
+                        onClick={() => setNewPickup(recommendedNewPickup)}
+                        className="text-xs font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline cursor-pointer"
+                      >
+                        Use +60m ({recommendedNewPickup.slice(11, 16)})
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <input
                   id="change-pickup-input"
